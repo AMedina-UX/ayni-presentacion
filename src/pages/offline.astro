@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Sin conexión - AYNI">
+  <div class="offline-container">
+    <div class="offline-card">
+      <div class="logo-wrapper">
+        <h1 class="logo-text">AYNI</h1>
+        <p class="logo-tagline">EL RETORNO SAGRADO DE LA ENERGÍA</p>
+      </div>
+
+      <div class="icon-wrapper">
+        <svg class="offline-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-3.536 4.978 4.978 0 011.414-3.536m0 0L5.636 5.636m0 0L3 3m2.636 2.636l2.829 2.829M12 12v.01" />
+        </svg>
+      </div>
+
+      <h2 class="offline-title">Parece que estás sin conexión</h2>
+      <p class="offline-message">
+        Esta sección de la presentación no se ha descargado aún. Puedes volver al inicio y seguir viendo las secciones que ya están preparadas para usar sin conexión.
+      </p>
+
+      <a href="/" class="home-btn">
+        Volver a la Presentación
+      </a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .offline-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    box-sizing: border-box;
+    padding: 20px;
+  }
+
+  .offline-card {
+    text-align: center;
+    max-width: 480px;
+    border-radius: 24px;
+    border: 1px solid rgba(243, 200, 100, 0.15);
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 48px 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .logo-wrapper {
+    margin-bottom: 32px;
+  }
+
+  .logo-text {
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    margin: 0;
+    background: linear-gradient(135deg, #ffe5a3 0%, #f3c864 50%, #b88b22 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo-tagline {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: rgba(243, 200, 100, 0.5);
+    margin: 4px 0 0 0;
+  }
+
+  .icon-wrapper {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .offline-icon {
+    width: 64px;
+    height: 64px;
+    color: #f3c864;
+    opacity: 0.8;
+  }
+
+  .offline-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 12px 0;
+  }
+
+  .offline-message {
+    font-size: 14px;
+    color: #a0a0a0;
+    line-height: 1.6;
+    margin: 0 0 32px 0;
+  }
+
+  .home-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #f5d078 0%, #e0b448 100%);
+    color: #000000;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(243, 200, 100, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(243, 200, 100, 0.5);
+  }
+
+  .home-btn:active {
+    transform: translateY(0);
+  }
+</style>

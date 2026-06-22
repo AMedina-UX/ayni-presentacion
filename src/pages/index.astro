@@ -1,0 +1,458 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PWA from '../components/PWA.astro';
+import InstallPrompt from '../components/InstallPrompt.astro';
+import { SLIDES } from '../data/slides';
+---
+
+<Layout title="AYNI - El Retorno Sagrado de la Energía">
+  
+  <!-- Presentation Viewport Container -->
+  <div class="slide-container">
+    <div id="presentation-wrapper" class="slide-content-wrapper">
+      
+      {SLIDES.map((slide) => (
+        <section 
+          id={`slide-${slide.id}`} 
+          class="slide" 
+          data-slide-id={slide.id}
+          data-prev={slide.header?.disableArrows ? "" : (slide.header?.prevSlide || "")}
+          data-next={slide.header?.disableArrows ? "" : (slide.header?.nextSlide || "")}
+          data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
+        >
+          <!-- Slide Background Artwork -->
+          <div class="slide-bg">
+            <img 
+              src={slide.bgImage} 
+              alt={slide.name} 
+              class="slide-bg-img" 
+              loading="eager"
+            />
+          </div>
+
+          <!-- Slide Header overlay (navigation & tabs) -->
+          {slide.header && (
+            <header class="slide-header">
+              <!-- Left Action Controls (Close, Prev/Next Arrows) -->
+              <div class="header-left">
+                {slide.header.showClose && (
+                  (slide.header.disableClose || !slide.header.closeTo) ? (
+                    <div class="header-btn close-btn disabled" title="Cerrar Deshabilitado">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
+                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+                      </svg>
+                    </div>
+                  ) : (
+                    <a href={`#${slide.header.closeTo}`} class="header-btn close-btn" title="Cerrar">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
+                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+                      </svg>
+                    </a>
+                  )
+                )}
+                {slide.header.showArrows && (
+                  <>
+                    {(slide.header.disableArrows || !slide.header.prevSlide) ? (
+                      <div class="header-btn arrow-btn prev-btn disabled" title="Anterior Deshabilitado">
+                        <img src="/assets/arrow_left.svg" alt="Anterior" />
+                      </div>
+                    ) : (
+                      <a 
+                        href={`#${slide.header.prevSlide}`} 
+                        class="header-btn arrow-btn prev-btn" 
+                        title="Anterior"
+                      >
+                        <img src="/assets/arrow_left.svg" alt="Anterior" />
+                      </a>
+                    )}
+                    {(slide.header.disableArrows || !slide.header.nextSlide) ? (
+                      <div class="header-btn arrow-btn next-btn disabled" title="Siguiente Deshabilitado">
+                        <img src="/assets/arrow_right.svg" alt="Siguiente" />
+                      </div>
+                    ) : (
+                      <a 
+                        href={`#${slide.header.nextSlide}`} 
+                        class="header-btn arrow-btn next-btn" 
+                        title="Siguiente"
+                      >
+                        <img src="/assets/arrow_right.svg" alt="Siguiente" />
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <!-- Middle Product Navigation Tab pills -->
+              {slide.header.activeTab && (
+                <div class="header-center">
+                  <div class="product-tabs">
+                    <a 
+                      href="#capucci-360" 
+                      class={`tab-pill ${slide.header.activeTab === 'capucci' ? 'active' : ''} ${slide.header.disabledTabs?.includes('capucci') ? 'disabled' : ''}`}
+                    >
+                      Capucci 360
+                    </a>
+                    <a 
+                      href="#moravi-360" 
+                      class={`tab-pill ${slide.header.activeTab === 'moravi' ? 'active' : ''} ${slide.header.disabledTabs?.includes('moravi') ? 'disabled' : ''}`}
+                    >
+                      Moravi 360
+                    </a>
+                    <a 
+                      href="#reset-360" 
+                      class={`tab-pill ${slide.header.activeTab === 'reset' ? 'active' : ''} ${slide.header.disabledTabs?.includes('reset') ? 'disabled' : ''}`}
+                    >
+                      Reset 360
+                    </a>
+                  </div>
+                </div>
+              )}
+            </header>
+          )}
+
+          <!-- Interactive Button overlays -->
+          {slide.buttons && (
+            <div class="buttons-container">
+              {slide.buttons.map((btn) => (
+                btn.disabled ? (
+                  <div 
+                    class="interactive-btn disabled"
+                    style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
+                  >
+                    <img src={btn.image} alt={btn.name} class="btn-card-img" />
+                  </div>
+                ) : (
+                  <a 
+                    href={`#${btn.linkTo}`} 
+                    class="interactive-btn"
+                    style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
+                  >
+                    <img src={btn.image} alt={btn.name} class="btn-card-img" />
+                  </a>
+                )
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+
+    </div>
+  </div>
+
+  <!-- PWA components -->
+  <PWA />
+  <InstallPrompt />
+
+</Layout>
+
+<style>
+  /* Layout & Scaling Wrapper */
+  .slide-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+  
+  .slide-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  /* Interactive overlay buttons */
+  .buttons-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .interactive-btn {
+    position: absolute;
+    display: block;
+    pointer-events: auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+  }
+
+  .interactive-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 35px rgba(243, 200, 100, 0.4);
+  }
+
+  .interactive-btn:active {
+    transform: scale(0.98);
+  }
+
+  .interactive-btn.disabled {
+    pointer-events: none;
+    opacity: 0.3;
+    filter: grayscale(100%);
+    box-shadow: none;
+  }
+
+  .btn-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  /* Slide Top Header Bar */
+  .slide-header {
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    height: 48px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .header-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .header-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(243, 200, 100, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+  }
+
+  .header-btn img,
+  .header-btn svg {
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+  }
+
+  .material-close-icon {
+    width: 24px;
+    height: 24px;
+    fill: #ffffff;
+    transition: fill 0.2s;
+  }
+
+  .header-btn:hover .material-close-icon {
+    fill: #f3c864;
+  }
+
+  .header-btn:hover {
+    background-color: rgba(243, 200, 100, 0.1);
+    border-color: rgba(243, 200, 100, 0.6);
+    transform: scale(1.05);
+  }
+
+  .header-btn:active {
+    transform: scale(0.95);
+  }
+
+  .header-btn.disabled {
+    pointer-events: none;
+    opacity: 0.2;
+    cursor: default;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Middle Product Tabs */
+  .header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .product-tabs {
+    display: flex;
+    align-items: center;
+    border-radius: 100px;
+    background-color: rgba(243, 200, 100, 0.05);
+    border: 1px solid #f3c864;
+    padding: 2px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(243, 200, 100, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .tab-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    color: rgba(243, 200, 100, 0.6);
+    border-radius: 100px;
+    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s;
+  }
+
+  .tab-pill:hover {
+    color: #f3c864;
+    background-color: rgba(243, 200, 100, 0.1);
+  }
+
+  .tab-pill.active {
+    color: #000000;
+    background-color: #f3c864;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(243, 200, 100, 0.4);
+  }
+
+  .tab-pill.disabled {
+    pointer-events: none;
+    opacity: 0.25;
+    filter: grayscale(100%);
+  }
+</style>
+
+<script>
+  // 1. Aspect Ratio Scaling Engine
+  const wrapper = document.getElementById('presentation-wrapper');
+  
+  function resizePresentation() {
+    if (!wrapper) return;
+    const baseWidth = 1920;
+    const baseHeight = 1080;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // Calculate the best scaling factor to fit screen
+    const scale = Math.min(windowWidth / baseWidth, windowHeight / baseHeight);
+    wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+  }
+  
+  window.addEventListener('resize', resizePresentation);
+  // Initial scale calculation
+  resizePresentation();
+  // Call again after DOM content is loaded to prevent race conditions
+  document.addEventListener('DOMContentLoaded', resizePresentation);
+
+
+  // 2. Hash Routing Slide Router
+  let activeSlideId = 'home';
+  
+  function route() {
+    const hash = window.location.hash.substring(1);
+    const targetId = hash || 'home';
+    const targetSlide = document.getElementById(`slide-${targetId}`);
+    
+    if (targetSlide) {
+      // Deactivate current slide
+      const currentActive = document.querySelector('.slide.active');
+      if (currentActive) {
+        currentActive.classList.remove('active');
+      }
+      
+      // Activate new slide
+      targetSlide.classList.add('active');
+      activeSlideId = targetId;
+      
+      // Update viewport scale in case dimensions changed
+      resizePresentation();
+    }
+  }
+  
+  window.addEventListener('hashchange', route);
+  // Initial route
+  route();
+
+
+  // 3. Keyboard PPT Controls
+  window.addEventListener('keydown', (e) => {
+    const currentSlide = document.getElementById(`slide-${activeSlideId}`);
+    if (!currentSlide) return;
+    
+    const prev = currentSlide.getAttribute('data-prev');
+    const next = currentSlide.getAttribute('data-next');
+    const close = currentSlide.getAttribute('data-close');
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      // Go to next slide
+      if (next) {
+        e.preventDefault();
+        window.location.hash = `#${next}`;
+      }
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+      // Go to previous slide
+      if (prev) {
+        e.preventDefault();
+        window.location.hash = `#${prev}`;
+      }
+    } else if (e.key === 'Escape') {
+      // Close / Back
+      if (close) {
+        e.preventDefault();
+        window.location.hash = `#${close}`;
+      }
+    }
+  });
+
+
+  // 4. Touch Gestures Swipe Engine (Optimized for Mobile/Safari Standalone)
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+  
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+  
+  document.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipeGesture();
+  }, { passive: true });
+  
+  function handleSwipeGesture() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Check if swipe is horizontal and meets threshold (min 60px)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 60) {
+      const currentSlide = document.getElementById(`slide-${activeSlideId}`);
+      if (!currentSlide) return;
+      
+      const prev = currentSlide.getAttribute('data-prev');
+      const next = currentSlide.getAttribute('data-next');
+      
+      if (deltaX < 0) {
+        // Swiped Left -> Next Slide
+        if (next) {
+          window.location.hash = `#${next}`;
+        }
+      } else {
+        // Swiped Right -> Prev Slide
+        if (prev) {
+          window.location.hash = `#${prev}`;
+        }
+      }
+    }
+  }
+</script>
