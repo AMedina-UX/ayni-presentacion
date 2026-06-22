@@ -202,8 +202,8 @@ export const SLIDES: Slide[] = [
       showClose: true,
       closeTo: "home",
       showArrows: true,
-      prevSlide: "bonos-1",
-      nextSlide: "plan"
+      disableNextArrow: true,
+      prevSlide: "bonos-1"
     }
   },
   {
