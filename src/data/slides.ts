@@ -214,8 +214,8 @@ export const SLIDES: Slide[] = [
       showClose: true,
       closeTo: "home",
       showArrows: true,
-      prevSlide: "bonos-2",
-      nextSlide: "productos"
+      disableNextArrow: true,
+      prevSlide: "productos",
     }
   }
 ];

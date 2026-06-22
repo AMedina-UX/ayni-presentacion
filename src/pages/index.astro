@@ -16,8 +16,8 @@ import { SLIDES } from '../data/slides';
           id={`slide-${slide.id}`} 
           class="slide" 
           data-slide-id={slide.id}
-          data-prev={slide.header?.disableArrows ? "" : (slide.header?.prevSlide || "")}
-          data-next={slide.header?.disableArrows ? "" : (slide.header?.nextSlide || "")}
+          data-prev={(slide.header?.disableArrows || slide.header?.disablePrevArrow) ? "" : (slide.header?.prevSlide || "")}
+          data-next={(slide.header?.disableArrows || slide.header?.disableNextArrow) ? "" : (slide.header?.nextSlide || "")}
           data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
         >
           <!-- Slide Background Artwork -->
@@ -52,7 +52,7 @@ import { SLIDES } from '../data/slides';
                 )}
                 {slide.header.showArrows && (
                   <>
-                    {(slide.header.disableArrows || !slide.header.prevSlide) ? (
+                    {(slide.header.disableArrows || slide.header.disablePrevArrow || !slide.header.prevSlide) ? (
                       <div class="header-btn arrow-btn prev-btn disabled" title="Anterior Deshabilitado">
                         <img src="/assets/arrow_left.svg" alt="Anterior" />
                       </div>
@@ -65,7 +65,7 @@ import { SLIDES } from '../data/slides';
                         <img src="/assets/arrow_left.svg" alt="Anterior" />
                       </a>
                     )}
-                    {(slide.header.disableArrows || !slide.header.nextSlide) ? (
+                    {(slide.header.disableArrows || slide.header.disableNextArrow || !slide.header.nextSlide) ? (
                       <div class="header-btn arrow-btn next-btn disabled" title="Siguiente Deshabilitado">
                         <img src="/assets/arrow_right.svg" alt="Siguiente" />
                       </div>
