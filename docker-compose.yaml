@@ -1,0 +1,19 @@
+services:
+  ayni-presentacion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ayni-presentacion
+
+    restart: unless-stopped
+
+    expose:
+      - "80"
+
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
