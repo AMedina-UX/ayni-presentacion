@@ -1,10 +1,12 @@
 services:
-  ayni-presentacion:
+  app.fe.ayni-webpage-landing:
+    labels:
+      svc: "app.fe.ayni-webpage-landing"
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: ayni-presentacion
+    container_name: app.fe.ayni-webpage-landing
 
     restart: unless-stopped
 
