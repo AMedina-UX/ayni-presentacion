@@ -1,5 +1,7 @@
 services:
   app.fe.ayni-webpage-landing:
+    labels:
+      svc: "app.fe.worldgen-webpage-landing"
     build:
       context: .
       dockerfile: Dockerfile
