@@ -7,7 +7,7 @@ services:
     container_name: app.fe.ayni-webpage-landing
 
     restart: unless-stopped
-    expose:
+    ports:
       - "80"
 
     networks:
