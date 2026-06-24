@@ -10,7 +10,7 @@ services:
 
     restart: unless-stopped
     ports:
-      - "80"
+      - "81:80"
 
     networks:
       - coolify
