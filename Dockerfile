@@ -3,18 +3,21 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY . .
-
 RUN npm run build
 
 
-FROM nginx:alpine
+FROM node:22-alpine AS runner
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN npm install --omit=dev
+
+EXPOSE 4321
+
+CMD ["npx", "astro", "preview", "--host", "0.0.0.0", "--port", "4321"]
