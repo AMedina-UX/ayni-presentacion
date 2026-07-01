@@ -2,7 +2,159 @@
 import Layout from '../layouts/Layout.astro';
 import PWA from '../components/PWA.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
-import { SLIDES } from '../data/slides';
+import { SLIDES, type Slide } from '../data/slides';
+
+const MOBILE_HOME_CARD_IMAGES: Record<string, string> = {
+  PRODUCTOS: '/assets/mobile-home/productos-card.png',
+  'PLAN DE COMPENSACIÓN': '/assets/mobile-home/plan-card.png',
+  BONOS: '/assets/mobile-home/bonos-card.png',
+};
+
+const MOBILE_HOME_BACKGROUND = '/assets/mobile-home/home-background.png';
+const MOBILE_PRODUCTS_BACKGROUND = '/assets/mobile-products/productos-background.png';
+
+
+const MOBILE_PRODUCTS_CARD_IMAGES: Record<string, string> = {
+  'CAPUCCI 360': '/assets/mobile-products/capucci-card.png',
+  'MORAVI 360': '/assets/mobile-products/moravi-card.png',
+  'RESET 360': '/assets/mobile-products/reset-card.png',
+};
+
+const MOBILE_FIGMA_BACKGROUNDS: Record<string, string> = {
+  'bonos-1': '/assets/mobile-home/bonos-bg.png',
+  'capucci-360': '/assets/mobile-products/capucci-bg.png',
+  'capucci-formula': '/assets/mobile-products/capucci-formula-bg.png',
+  'moravi-360': '/assets/mobile-products/moravi-bg.png',
+  'moravi-formula': '/assets/mobile-products/moravi-formula-bg.png',
+  'reset-360': '/assets/mobile-products/reset-bg.png',
+  'reset-formula': '/assets/mobile-products/reset-formula-bg.png',
+  'bonos-2': '/assets/mobile-bonus-travel/bonos2-bg.png',
+  'precios': '/assets/mobile-products/precios-bg.png',
+};
+
+interface MobileComposedSceneCard {
+  name: string;
+  image: string;
+  linkTo?: string;
+  disabled?: boolean;
+}
+
+interface MobileComposedSceneConfig {
+  id: 'home' | 'productos';
+  background: string;
+  stackTop: number;
+  cards: MobileComposedSceneCard[];
+  footer?: {
+    backTarget: string;
+    nextTarget?: string;
+  };
+}
+
+const MOBILE_POSTER_SLIDES = new Set([]);
+
+const MOBILE_COMPOSED_SCENE_STACKS = {
+  home: {
+    top: 271,
+  },
+  productos: {
+    top: 260,
+  },
+} as const;
+
+function isMobilePosterSlide(slideId: string) {
+  return MOBILE_POSTER_SLIDES.has(slideId);
+}
+
+function getMobileBackAction(slide: Slide) {
+  if (slide.id === 'home') {
+    return null;
+  }
+
+  if (slide.id === 'productos') {
+    return {
+      target: 'home',
+      label: 'Atrás',
+    };
+  }
+
+  const target = slide.header?.prevSlide || slide.header?.closeTo;
+  if (!target) {
+    return null;
+  }
+
+  return {
+    target,
+    label: 'Atrás',
+  };
+}
+
+function getMobileNextAction(slide: Slide) {
+  if (slide.id === 'productos') {
+    return null;
+  }
+
+  if (slide.id === 'precios') {
+    return {
+      target: slide.header?.closeTo || 'home',
+      label: 'Ir a inicio',
+    };
+  }
+
+  if (slide.header?.nextSlide) {
+    return {
+      target: slide.header.nextSlide,
+      label: 'Siguiente',
+    };
+  }
+
+  if ((slide.id === 'bonos-2' || slide.id === 'precios') && slide.header?.closeTo) {
+    return {
+      target: slide.header.closeTo,
+      label: 'Ir a inicio',
+    };
+  }
+
+  return null;
+}
+
+function toMobileCqw(value: number) {
+  return `${(value / 390) * 100}cqw`;
+}
+
+function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null {
+  if (slide.id === 'home') {
+    return {
+      id: 'home',
+      background: MOBILE_HOME_BACKGROUND,
+      stackTop: MOBILE_COMPOSED_SCENE_STACKS.home.top,
+      cards: (slide.buttons || []).map((button) => ({
+        name: button.name,
+        image: MOBILE_HOME_CARD_IMAGES[button.name] || button.image,
+        linkTo: button.disabled ? undefined : button.linkTo,
+        disabled: button.disabled,
+      })),
+    };
+  }
+
+  if (slide.id === 'productos') {
+    return {
+      id: 'productos',
+      background: MOBILE_PRODUCTS_BACKGROUND,
+      stackTop: MOBILE_COMPOSED_SCENE_STACKS.productos.top,
+      cards: (slide.buttons || []).map((button) => ({
+        name: button.name,
+        image: MOBILE_PRODUCTS_CARD_IMAGES[button.name] || button.image,
+        linkTo: button.linkTo,
+      })),
+      footer: {
+        backTarget: slide.header?.closeTo || 'home',
+      },
+    };
+  }
+
+  return null;
+}
+
 ---
 
 <Layout title="AYNI - El Retorno Sagrado de la Energía">
@@ -11,131 +163,289 @@ import { SLIDES } from '../data/slides';
   <div class="slide-container">
     <div id="presentation-wrapper" class="slide-content-wrapper">
       
-      {SLIDES.map((slide) => (
-        <section 
-          id={`slide-${slide.id}`} 
-          class="slide" 
-          data-slide-id={slide.id}
-          data-prev={(slide.header?.disableArrows || slide.header?.disablePrevArrow) ? "" : (slide.header?.prevSlide || "")}
-          data-next={(slide.header?.disableArrows || slide.header?.disableNextArrow) ? "" : (slide.header?.nextSlide || "")}
-          data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
-        >
-          <!-- Slide Background Artwork -->
-          <div class="slide-bg">
-            <img 
-              src={slide.bgImage} 
-              alt={slide.name} 
-              class="slide-bg-img" 
-              loading="eager"
-            />
-          </div>
+      {SLIDES.map((slide) => {
+        const mobileBackAction = getMobileBackAction(slide);
+        const mobileNextAction = getMobileNextAction(slide);
+        const mobileComposedScene = getMobileComposedScene(slide);
+        const mobileFigmaBg = MOBILE_FIGMA_BACKGROUNDS[slide.id] || null;
 
-          <!-- Slide Header overlay (navigation & tabs) -->
-          {slide.header && (
-            <header class="slide-header">
-              <!-- Left Action Controls (Close, Prev/Next Arrows) -->
-              <div class="header-left">
-                {slide.header.showClose && (
-                  (slide.header.disableClose || !slide.header.closeTo) ? (
-                    <div class="header-btn close-btn disabled" title="Cerrar Deshabilitado">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
-                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
-                      </svg>
-                    </div>
-                  ) : (
-                    <a href={`#${slide.header.closeTo}`} class="header-btn close-btn" title="Cerrar">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
-                        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
-                      </svg>
-                    </a>
-                  )
-                )}
-                {slide.header.showArrows && (
-                  <>
-                    {(slide.header.disableArrows || slide.header.disablePrevArrow || !slide.header.prevSlide) ? (
-                      <div class="header-btn arrow-btn prev-btn disabled" title="Anterior Deshabilitado">
-                        <img src="/assets/arrow_left.svg" alt="Anterior" />
-                      </div>
-                    ) : (
-                      <a 
-                        href={`#${slide.header.prevSlide}`} 
-                        class="header-btn arrow-btn prev-btn" 
-                        title="Anterior"
-                      >
-                        <img src="/assets/arrow_left.svg" alt="Anterior" />
-                      </a>
-                    )}
-                    {(slide.header.disableArrows || slide.header.disableNextArrow || !slide.header.nextSlide) ? (
-                      <div class="header-btn arrow-btn next-btn disabled" title="Siguiente Deshabilitado">
-                        <img src="/assets/arrow_right.svg" alt="Siguiente" />
-                      </div>
-                    ) : (
-                      <a 
-                        href={`#${slide.header.nextSlide}`} 
-                        class="header-btn arrow-btn next-btn" 
-                        title="Siguiente"
-                      >
-                        <img src="/assets/arrow_right.svg" alt="Siguiente" />
-                      </a>
-                    )}
-                  </>
-                )}
+        return (
+          <section
+            id={`slide-${slide.id}`}
+            class="slide"
+            data-slide-id={slide.id}
+            data-prev={(slide.header?.disableArrows || slide.header?.disablePrevArrow) ? "" : (slide.header?.prevSlide || "")}
+            data-next={(slide.header?.disableArrows || slide.header?.disableNextArrow) ? "" : (slide.header?.nextSlide || "")}
+            data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
+          >
+            <div class="slide-backdrop" aria-hidden="true">
+              <img
+                src={slide.bgImage}
+                alt=""
+                class="slide-backdrop-img"
+                loading="eager"
+              />
+            </div>
+
+            <div class="slide-frame">
+              <!-- Slide Background Artwork -->
+              <div class="slide-bg">
+                <img
+                  src={slide.bgImage}
+                  alt={slide.name}
+                  class="slide-bg-img"
+                  loading="eager"
+                />
               </div>
 
-              <!-- Middle Product Navigation Tab pills -->
-              {slide.header.activeTab && (
-                <div class="header-center">
-                  <div class="product-tabs">
-                    <a 
-                      href="#capucci-360" 
-                      class={`tab-pill ${slide.header.activeTab === 'capucci' ? 'active' : ''} ${slide.header.disabledTabs?.includes('capucci') ? 'disabled' : ''}`}
-                    >
-                      Capucci 360
-                    </a>
-                    <a 
-                      href="#moravi-360" 
-                      class={`tab-pill ${slide.header.activeTab === 'moravi' ? 'active' : ''} ${slide.header.disabledTabs?.includes('moravi') ? 'disabled' : ''}`}
-                    >
-                      Moravi 360
-                    </a>
-                    <a 
-                      href="#reset-360" 
-                      class={`tab-pill ${slide.header.activeTab === 'reset' ? 'active' : ''} ${slide.header.disabledTabs?.includes('reset') ? 'disabled' : ''}`}
-                    >
-                      Reset 360
-                    </a>
+              <!-- Slide Header overlay (navigation & tabs) -->
+              {slide.header && (
+                <header class="slide-header">
+                  <div class="header-left">
+                    {slide.header.showClose && (
+                      (slide.header.disableClose || !slide.header.closeTo) ? (
+                        <div class="header-btn close-btn disabled" title="Cerrar Deshabilitado">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
+                            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+                          </svg>
+                        </div>
+                      ) : (
+                        <a href={`#${slide.header.closeTo}`} class="header-btn close-btn" title="Cerrar">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
+                            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+                          </svg>
+                        </a>
+                      )
+                    )}
+                    {slide.header.showArrows && (
+                      <>
+                        {(slide.header.disableArrows || slide.header.disablePrevArrow || !slide.header.prevSlide) ? (
+                          <div class="header-btn arrow-btn prev-btn disabled" title="Anterior Deshabilitado">
+                            <img src="/assets/arrow_left.svg" alt="Anterior" />
+                          </div>
+                        ) : (
+                          <a
+                            href={`#${slide.header.prevSlide}`}
+                            class="header-btn arrow-btn prev-btn"
+                            title="Anterior"
+                          >
+                            <img src="/assets/arrow_left.svg" alt="Anterior" />
+                          </a>
+                        )}
+                        {(slide.header.disableArrows || slide.header.disableNextArrow || !slide.header.nextSlide) ? (
+                          <div class="header-btn arrow-btn next-btn disabled" title="Siguiente Deshabilitado">
+                            <img src="/assets/arrow_right.svg" alt="Siguiente" />
+                          </div>
+                        ) : (
+                          <a
+                            href={`#${slide.header.nextSlide}`}
+                            class="header-btn arrow-btn next-btn"
+                            title="Siguiente"
+                          >
+                            <img src="/assets/arrow_right.svg" alt="Siguiente" />
+                          </a>
+                        )}
+                      </>
+                    )}
                   </div>
+
+                  {slide.header.activeTab && (
+                    <div class="header-center">
+                      <div class="product-tabs">
+                        <a
+                          href="#capucci-360"
+                          class={`tab-pill ${slide.header.activeTab === 'capucci' ? 'active' : ''} ${slide.header.disabledTabs?.includes('capucci') ? 'disabled' : ''}`}
+                        >
+                          Capucci 360
+                        </a>
+                        <a
+                          href="#moravi-360"
+                          class={`tab-pill ${slide.header.activeTab === 'moravi' ? 'active' : ''} ${slide.header.disabledTabs?.includes('moravi') ? 'disabled' : ''}`}
+                        >
+                          Moravi 360
+                        </a>
+                        <a
+                          href="#reset-360"
+                          class={`tab-pill ${slide.header.activeTab === 'reset' ? 'active' : ''} ${slide.header.disabledTabs?.includes('reset') ? 'disabled' : ''}`}
+                        >
+                          Reset 360
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </header>
+              )}
+
+              {slide.buttons && (
+                <div class="buttons-container">
+                  {slide.buttons.map((btn) => (
+                    btn.disabled ? (
+                      <div
+                        class="interactive-btn disabled"
+                        style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
+                      >
+                        <img src={btn.image} alt={btn.name} class="btn-card-img" />
+                      </div>
+                    ) : (
+                      <a
+                        href={`#${btn.linkTo}`}
+                        class="interactive-btn"
+                        style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
+                      >
+                        <img src={btn.image} alt={btn.name} class="btn-card-img" />
+                      </a>
+                    )
+                  ))}
                 </div>
               )}
-            </header>
-          )}
-
-          <!-- Interactive Button overlays -->
-          {slide.buttons && (
-            <div class="buttons-container">
-              {slide.buttons.map((btn) => (
-                btn.disabled ? (
-                  <div 
-                    class="interactive-btn disabled"
-                    style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
-                  >
-                    <img src={btn.image} alt={btn.name} class="btn-card-img" />
-                  </div>
-                ) : (
-                  <a 
-                    href={`#${btn.linkTo}`} 
-                    class="interactive-btn"
-                    style={`left: ${btn.x}px; top: ${btn.y}px; width: ${btn.width}px; height: ${btn.height}px;`}
-                  >
-                    <img src={btn.image} alt={btn.name} class="btn-card-img" />
-                  </a>
-                )
-              ))}
             </div>
-          )}
-        </section>
-      ))}
 
+            <div class:list={['mobile-stage', mobileFigmaBg && 'mobile-stage--figma']}>
+              <div class="mobile-backdrop" aria-hidden="true">
+                <img
+                  src={mobileFigmaBg
+                    || mobileComposedScene?.background
+                    || (slide.id === 'home'
+                      ? MOBILE_HOME_BACKGROUND
+                      : slide.id === 'productos'
+                        ? MOBILE_PRODUCTS_BACKGROUND
+                        : slide.bgImage)}
+                  alt=""
+                  class="mobile-backdrop-img"
+                  loading="eager"
+                />
+              </div>
+
+              <div class="mobile-shell">
+                {!mobileComposedScene ? (
+                  <header class="mobile-nav-bar">
+                    <img src="/assets/mobile-topbar/ayni-logo.svg" alt="AYNI" class="mobile-brand-img" />
+                    <button type="button" class="mobile-menu-btn" data-mobile-menu-open aria-label="Abrir menú">
+                      <img src="/assets/mobile-topbar/menu-icon.svg" alt="" class="mobile-menu-icon" />
+                    </button>
+                  </header>
+                ) : null}
+
+                {mobileComposedScene ? (
+                  <div class:list={['mobile-scene', 'mobile-composed-scene', `mobile-composed-scene--${mobileComposedScene.id}`]}>
+                    <img
+                      src={mobileComposedScene.background}
+                      alt={slide.name}
+                      class="mobile-composed-scene-bg"
+                    />
+
+                    <header class="mobile-nav-bar mobile-nav-bar--overlay">
+                      <img src="/assets/mobile-topbar/ayni-logo.svg" alt="AYNI" class="mobile-brand-img" />
+                      <button type="button" class="mobile-menu-btn" data-mobile-menu-open aria-label="Abrir menú">
+                        <img src="/assets/mobile-topbar/menu-icon.svg" alt="" class="mobile-menu-icon" />
+                      </button>
+                    </header>
+
+                    <div
+                      class="mobile-composed-stack"
+                      style={`top: ${toMobileCqw(mobileComposedScene.stackTop)};`}
+                    >
+                      {mobileComposedScene.cards.map((card) => (
+                        card.linkTo ? (
+                          <a href={`#${card.linkTo}`} class="mobile-composed-card" aria-label={card.name}>
+                            <img
+                              src={card.image}
+                              alt={card.name}
+                              class="mobile-composed-card-image"
+                            />
+                          </a>
+                        ) : (
+                          <div class="mobile-composed-card mobile-composed-card--static" aria-label={card.name}>
+                            <img
+                              src={card.image}
+                              alt={card.name}
+                              class="mobile-composed-card-image"
+                            />
+                          </div>
+                        )
+                      ))}
+                    </div>
+
+                    {mobileComposedScene.footer && (
+                      <footer class="mobile-composed-footer">
+                        <a href={`#${mobileComposedScene.footer.backTarget}`} class="mobile-composed-footer-link mobile-composed-footer-link--back">
+                          <img src="/assets/mobile-arrow-left.svg" alt="" class="mobile-composed-footer-icon" />
+                          <span>Atrás</span>
+                        </a>
+
+                        {mobileComposedScene.footer.nextTarget && (
+                          <a href={`#${mobileComposedScene.footer.nextTarget}`} class="mobile-composed-footer-link mobile-composed-footer-link--next">
+                            <span>Siguiente</span>
+                            <img src="/assets/mobile-arrow-right.svg" alt="" class="mobile-composed-footer-icon" />
+                          </a>
+                        )}
+                      </footer>
+                    )}
+                  </div>
+                ) : mobileFigmaBg ? (
+                  <div class="mobile-scene mobile-figma-scene" />
+                ) : (
+                  <div class:list={['mobile-scene', 'mobile-poster-scene', isMobilePosterSlide(slide.id) && 'mobile-poster-scene--full']}>
+                    <div class="mobile-poster-frame">
+                      <img src={slide.bgImage} alt={slide.name} class="mobile-poster-image" />
+                    </div>
+                  </div>
+                )}
+
+                {slide.id !== 'home' && !mobileComposedScene && (
+                  <footer class="mobile-footer">
+                    {mobileBackAction ? (
+                      <a href={`#${mobileBackAction.target}`} class="mobile-footer-link">
+                        <img src="/assets/mobile-arrow-left.svg" alt="" class="mobile-footer-icon" />
+                        <span>{mobileBackAction.label}</span>
+                      </a>
+                    ) : (
+                      <span class="mobile-footer-link mobile-footer-link--hidden">Atrás</span>
+                    )}
+
+                    {mobileNextAction ? (
+                      <a href={`#${mobileNextAction.target}`} class="mobile-footer-link mobile-footer-link--next">
+                        <span>{mobileNextAction.label}</span>
+                        <img src="/assets/mobile-arrow-right.svg" alt="" class="mobile-footer-icon" />
+                      </a>
+                    ) : (
+                      <span class="mobile-footer-link mobile-footer-link--hidden">Siguiente</span>
+                    )}
+                  </footer>
+                )}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+
+    </div>
+  </div>
+
+  <div id="mobile-menu-overlay" class="mobile-menu-overlay" hidden>
+    <div class="mobile-menu-panel" role="dialog" aria-modal="true" aria-label="Menu de navegacion">
+      <div class="mobile-menu-content">
+        <div class="mobile-menu-header">
+          <button type="button" class="mobile-menu-close" data-mobile-menu-close aria-label="Cerrar menú">
+            <img src="/assets/mobile-topbar/close-icon.svg" alt="" />
+          </button>
+        </div>
+
+        <nav class="mobile-menu-nav" aria-label="Secciones mobile">
+          <a href="#home" class="mobile-menu-link" data-mobile-menu-link>Inicio</a>
+          <a href="#productos" class="mobile-menu-link" data-mobile-menu-link>Qué es AYNI</a>
+          <a href="#bonos-1" class="mobile-menu-link" data-mobile-menu-link>Bonos</a>
+          <div class="mobile-menu-divider" aria-hidden="true"></div>
+          <div class="mobile-menu-section-label">Productos</div>
+          <a href="#capucci-360" class="mobile-menu-link" data-mobile-menu-link>Capucci 360</a>
+          <a href="#moravi-360" class="mobile-menu-link" data-mobile-menu-link>Moravi 360</a>
+          <a href="#reset-360" class="mobile-menu-link" data-mobile-menu-link>Reset 360</a>
+        </nav>
+      </div>
+
+      <button type="button" class="mobile-menu-dismiss" data-mobile-menu-close>
+        Cerrar
+      </button>
     </div>
   </div>
 
@@ -146,6 +456,446 @@ import { SLIDES } from '../data/slides';
 </Layout>
 
 <style>
+  .slide-backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-color: #000000;
+  }
+
+  .slide-backdrop-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(26px) brightness(0.34) saturate(0.86);
+    transform: scale(1.08);
+    opacity: 0.92;
+    pointer-events: none;
+  }
+
+  .slide-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: top left;
+    transform: translate3d(var(--slide-frame-left), var(--slide-frame-top), 0) scale(var(--slide-frame-scale));
+    will-change: transform;
+  }
+
+  .mobile-stage {
+    display: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-color: #000000;
+  }
+
+  html[data-presentation-mode='mobile'] .slide-backdrop,
+  html[data-presentation-mode='mobile'] .slide-frame {
+    display: none;
+  }
+
+  html[data-presentation-mode='mobile'] .mobile-stage {
+    display: block;
+  }
+
+  .mobile-backdrop {
+    position: absolute;
+    inset: 0;
+  }
+
+  .mobile-backdrop-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(18px) brightness(0.22) saturate(0.72);
+    transform: scale(1.14);
+    opacity: 0.92;
+  }
+
+  .slide[data-slide-id='home'] .mobile-backdrop-img,
+  .slide[data-slide-id='productos'] .mobile-backdrop-img {
+    filter: none;
+    transform: none;
+    opacity: 1;
+    object-position: center center;
+  }
+
+  .slide[data-slide-id='home'] .mobile-backdrop,
+  .slide[data-slide-id='productos'] .mobile-backdrop {
+    display: none;
+  }
+
+  .mobile-stage--figma .mobile-backdrop-img {
+    filter: none;
+    transform: none;
+    opacity: 1;
+    object-position: center center;
+  }
+
+  .mobile-figma-scene {
+    flex: 1;
+  }
+
+  .mobile-shell {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    width: 100%;
+    min-height: 100%;
+    margin: 0 auto;
+    flex-direction: column;
+    padding: max(0px, env(safe-area-inset-top)) 0 max(0px, env(safe-area-inset-bottom));
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .mobile-nav-bar {
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    flex: 0 0 auto;
+    height: 56px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5.78px 16px;
+    background: #000000;
+    line-height: 1;
+  }
+
+  .mobile-nav-bar--overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 4;
+  }
+
+  .mobile-brand-img {
+    display: block;
+    width: 98px;
+    height: 24px;
+  }
+
+  .mobile-menu-btn,
+  .mobile-menu-close,
+  .mobile-menu-dismiss {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #f3c864;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .mobile-menu-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobile-scene {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+
+
+  .mobile-composed-scene {
+    position: relative;
+    width: 100%;
+    max-width: min(100%, calc(var(--mobile-vh, 100vh) * 0.4626));
+    aspect-ratio: 390 / 844;
+    flex: 0 0 auto;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #000000;
+    container-type: inline-size;
+  }
+
+  .mobile-composed-scene-bg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  .mobile-composed-scene .mobile-nav-bar {
+    height: 14.358974cqw;
+    padding: 1.481481cqw 4.102564cqw;
+  }
+
+  .mobile-composed-stack {
+    position: absolute;
+    left: 4.102564cqw;
+    z-index: 2;
+    display: flex;
+    width: 91.794872cqw;
+    flex-direction: column;
+    gap: 4.102564cqw;
+  }
+
+  .mobile-composed-card,
+  .mobile-composed-card--static {
+    display: block;
+    width: 100%;
+    aspect-ratio: 358 / 161;
+    overflow: hidden;
+    background: transparent;
+    line-height: 0;
+  }
+
+  .mobile-composed-card--static {
+    pointer-events: none;
+  }
+
+  .mobile-composed-card-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  .mobile-composed-footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 14.358974cqw;
+    padding: 1.481481cqw 4.102564cqw;
+    background: #000000;
+  }
+
+  .mobile-composed-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2.051282cqw;
+    color: #f3c864;
+    font-size: 5.128205cqw;
+    font-weight: 400;
+    line-height: 7.179487cqw;
+    text-decoration: none;
+  }
+
+  .mobile-composed-footer-link--back {
+    min-width: 21.538462cqw;
+  }
+
+  .mobile-composed-footer-link--next {
+    min-width: 32.820513cqw;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .mobile-composed-footer-icon {
+    width: 6.153846cqw;
+    height: 6.153846cqw;
+    object-fit: contain;
+  }
+
+  .slide[data-slide-id='home'] .mobile-shell,
+  .slide[data-slide-id='productos'] .mobile-shell {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .slide[data-slide-id='bonos-1'] .mobile-shell,
+  .slide[data-slide-id='bonos-2'] .mobile-shell,
+  .slide[data-slide-id='capucci-360'] .mobile-shell,
+  .slide[data-slide-id='moravi-360'] .mobile-shell,
+  .slide[data-slide-id='reset-360'] .mobile-shell,
+  .slide[data-slide-id='capucci-formula'] .mobile-shell,
+  .slide[data-slide-id='moravi-formula'] .mobile-shell,
+  .slide[data-slide-id='reset-formula'] .mobile-shell,
+  .slide[data-slide-id='precios'] .mobile-shell {
+    padding: 0;
+  }
+
+  .mobile-poster-scene {
+    justify-content: center;
+    padding: 10px 16px 8px;
+  }
+
+  .mobile-poster-scene--full {
+    justify-content: flex-start;
+    padding-top: 6px;
+  }
+
+  .mobile-poster-frame {
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid rgba(243, 200, 100, 0.22);
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .mobile-poster-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .mobile-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 56px;
+    padding: 5.78px 16px;
+    border-top: 1px solid rgba(243, 200, 100, 0.16);
+    background: #000000;
+  }
+
+  .mobile-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #f3c864;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 28px;
+    text-decoration: none;
+  }
+
+  .mobile-footer-link--next {
+    margin-left: auto;
+  }
+
+  .mobile-footer-link--hidden {
+    visibility: hidden;
+  }
+
+  .mobile-footer-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: none;
+  }
+
+  html[data-presentation-mode='mobile'].mobile-menu-open .mobile-menu-overlay {
+    display: flex;
+  }
+
+  .mobile-menu-panel {
+    position: relative;
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px 0;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-menu-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    overflow: hidden;
+    padding: 0 16px;
+    background: #000000;
+  }
+
+  .mobile-menu-close {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .mobile-menu-close img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobile-menu-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mobile-menu-divider {
+    height: 1px;
+    background: rgba(243, 200, 100, 0.25);
+  }
+
+  .mobile-menu-section-label {
+    display: flex;
+    height: 38px;
+    align-items: center;
+    padding: 0 16px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .mobile-menu-link {
+    display: flex;
+    height: 38px;
+    align-items: center;
+    padding: 0 16px;
+    color: #f3c864;
+    font-size: 20px;
+    font-weight: 400;
+    text-decoration: none;
+  }
+
+  .mobile-menu-dismiss {
+    display: flex;
+    height: 38px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    color: #f3c864;
+    font-size: 20px;
+    font-weight: 400;
+  }
+
   /* Layout & Scaling Wrapper */
   .slide-bg {
     position: absolute;
@@ -158,8 +908,13 @@ import { SLIDES } from '../data/slides';
   .slide-bg-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: fill;
     pointer-events: none;
+  }
+
+  html[data-presentation-mode='compact'] .slide-backdrop-img {
+    filter: blur(18px) brightness(0.3) saturate(0.82);
+    transform: scale(1.12);
   }
 
   /* Interactive overlay buttons */
@@ -331,80 +1086,124 @@ import { SLIDES } from '../data/slides';
 </style>
 
 <script>
-  // 1. Aspect Ratio Scaling Engine
+  const root = document.documentElement;
   const wrapper = document.getElementById('presentation-wrapper');
-  
+  const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+  const mobileBreakpoint = 1024;
+
+  function setMobileMenuOpen(isOpen) {
+    const shouldOpen = Boolean(isOpen) && root.dataset.presentationMode === 'mobile';
+    root.classList.toggle('mobile-menu-open', shouldOpen);
+    if (mobileMenuOverlay) {
+      mobileMenuOverlay.hidden = !shouldOpen;
+    }
+  }
+
   function resizePresentation() {
     if (!wrapper) return;
+
     const baseWidth = 1920;
     const baseHeight = 1080;
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    
-    // Calculate the best scaling factor to fit screen
-    const scale = Math.min(windowWidth / baseWidth, windowHeight / baseHeight);
-    wrapper.style.transform = `translateX(-50%) scale(${scale})`;
+    const isMobile = windowWidth <= mobileBreakpoint;
+
+    if (isMobile) {
+      root.dataset.presentationMode = 'mobile';
+      root.style.setProperty('--slide-frame-scale', '1');
+      root.style.setProperty('--slide-frame-left', '0px');
+      root.style.setProperty('--slide-frame-top', '0px');
+      root.style.setProperty('--mobile-vh', `${windowHeight}px`);
+      return;
+    }
+
+    const scale = Math.max(windowWidth / baseWidth, windowHeight / baseHeight);
+    const frameWidth = baseWidth * scale;
+    const frameHeight = baseHeight * scale;
+    const frameLeft = (windowWidth - frameWidth) / 2;
+    const frameTop = (windowHeight - frameHeight) / 2;
+
+    setMobileMenuOpen(false);
+    root.dataset.presentationMode = 'desktop';
+    root.style.setProperty('--slide-frame-scale', String(scale));
+    root.style.setProperty('--slide-frame-left', `${frameLeft}px`);
+    root.style.setProperty('--slide-frame-top', `${frameTop}px`);
   }
-  
+
   window.addEventListener('resize', resizePresentation);
-  // Initial scale calculation
   resizePresentation();
-  // Call again after DOM content is loaded to prevent race conditions
   document.addEventListener('DOMContentLoaded', resizePresentation);
 
 
-  // 2. Hash Routing Slide Router
   let activeSlideId = 'home';
-  
+
   function route() {
     const hash = window.location.hash.substring(1);
     const targetId = hash || 'home';
     const targetSlide = document.getElementById(`slide-${targetId}`);
-    
+
     if (targetSlide) {
-      // Deactivate current slide
       const currentActive = document.querySelector('.slide.active');
       if (currentActive) {
         currentActive.classList.remove('active');
       }
-      
-      // Activate new slide
+
       targetSlide.classList.add('active');
       activeSlideId = targetId;
-      
-      // Update viewport scale in case dimensions changed
+      setMobileMenuOpen(false);
       resizePresentation();
     }
   }
-  
+
   window.addEventListener('hashchange', route);
-  // Initial route
   route();
 
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
 
-  // 3. Keyboard PPT Controls
+    if (target.closest('[data-mobile-menu-open]')) {
+      setMobileMenuOpen(true);
+      return;
+    }
+
+    if (target.closest('[data-mobile-menu-close]') || target.closest('[data-mobile-menu-link]')) {
+      setMobileMenuOpen(false);
+      return;
+    }
+
+    if (target === mobileMenuOverlay) {
+      setMobileMenuOpen(false);
+    }
+  });
+
   window.addEventListener('keydown', (e) => {
+    if (root.classList.contains('mobile-menu-open')) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMobileMenuOpen(false);
+      }
+      return;
+    }
+
     const currentSlide = document.getElementById(`slide-${activeSlideId}`);
     if (!currentSlide) return;
-    
+
     const prev = currentSlide.getAttribute('data-prev');
     const next = currentSlide.getAttribute('data-next');
     const close = currentSlide.getAttribute('data-close');
-    
+
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
-      // Go to next slide
       if (next) {
         e.preventDefault();
         window.location.hash = `#${next}`;
       }
     } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
-      // Go to previous slide
       if (prev) {
         e.preventDefault();
         window.location.hash = `#${prev}`;
       }
     } else if (e.key === 'Escape') {
-      // Close / Back
       if (close) {
         e.preventDefault();
         window.location.hash = `#${close}`;
@@ -413,42 +1212,42 @@ import { SLIDES } from '../data/slides';
   });
 
 
-  // 4. Touch Gestures Swipe Engine (Optimized for Mobile/Safari Standalone)
   let touchStartX = 0;
   let touchStartY = 0;
   let touchEndX = 0;
   let touchEndY = 0;
-  
+
   document.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
   }, { passive: true });
-  
+
   document.addEventListener('touchend', (e) => {
     touchEndX = e.changedTouches[0].screenX;
     touchEndY = e.changedTouches[0].screenY;
     handleSwipeGesture();
   }, { passive: true });
-  
+
   function handleSwipeGesture() {
+    if (root.classList.contains('mobile-menu-open')) {
+      return;
+    }
+
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
-    
-    // Check if swipe is horizontal and meets threshold (min 60px)
+
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 60) {
       const currentSlide = document.getElementById(`slide-${activeSlideId}`);
       if (!currentSlide) return;
-      
+
       const prev = currentSlide.getAttribute('data-prev');
       const next = currentSlide.getAttribute('data-next');
-      
+
       if (deltaX < 0) {
-        // Swiped Left -> Next Slide
         if (next) {
           window.location.hash = `#${next}`;
         }
       } else {
-        // Swiped Right -> Prev Slide
         if (prev) {
           window.location.hash = `#${prev}`;
         }
