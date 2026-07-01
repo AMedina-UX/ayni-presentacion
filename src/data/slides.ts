@@ -53,7 +53,7 @@ export const SLIDES: Slide[] = [
         x: 710,
         y: 408,
         width: 500,
-        height: 500
+        height: 500,
       },
       {
         name: "BONOS",
@@ -138,7 +138,7 @@ export const SLIDES: Slide[] = [
       showClose: true,
       closeTo: "productos",
       showArrows: true,
-      prevSlide: "capucci-formula",
+      prevSlide: "productos",
       nextSlide: "moravi-formula",
       activeTab: "moravi"
     }
@@ -164,7 +164,7 @@ export const SLIDES: Slide[] = [
       showClose: true,
       closeTo: "productos",
       showArrows: true,
-      prevSlide: "moravi-formula",
+      prevSlide: "productos",
       nextSlide: "reset-formula",
       activeTab: "reset"
     }
