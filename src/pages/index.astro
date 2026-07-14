@@ -20,6 +20,27 @@ const MOBILE_PRODUCTS_CARD_IMAGES: Record<string, string> = {
   'RESET 360': '/assets/mobile-products/reset-card.png',
 };
 
+const MOBILE_PRICING_ASSETS = {
+  background: '/assets/mobile-pricing/background.png',
+  logo: '/assets/mobile-pricing/ayni-logo.png',
+  capucci: '/assets/mobile-pricing/capucci.png',
+  moravi: '/assets/mobile-pricing/moravi.png',
+  reset: '/assets/mobile-pricing/reset.png',
+} as const;
+
+const MOBILE_PRICING_CARDS = [
+  {
+    pack: '05 DOYPACK',
+    price: 'S/.450.00',
+    points: '60 PUNTOS',
+  },
+  {
+    pack: '08 DOYPACK',
+    price: 'S/.720.00',
+    points: '100 PUNTOS',
+  },
+] as const;
+
 const MOBILE_FIGMA_BACKGROUNDS: Record<string, string> = {
   'bonos-1': '/assets/mobile-home/bonos-bg.png',
   'capucci-360': '/assets/mobile-products/capucci-bg.png',
@@ -29,7 +50,6 @@ const MOBILE_FIGMA_BACKGROUNDS: Record<string, string> = {
   'reset-360': '/assets/mobile-products/reset-bg.png',
   'reset-formula': '/assets/mobile-products/reset-formula-bg.png',
   'bonos-2': '/assets/mobile-bonus-travel/bonos2-bg.png',
-  'precios': '/assets/mobile-products/precios-bg.png',
 };
 
 interface MobileComposedSceneCard {
@@ -50,8 +70,6 @@ interface MobileComposedSceneConfig {
   };
 }
 
-const MOBILE_POSTER_SLIDES = new Set([]);
-
 const MOBILE_COMPOSED_SCENE_STACKS = {
   home: {
     top: 271,
@@ -61,12 +79,8 @@ const MOBILE_COMPOSED_SCENE_STACKS = {
   },
 } as const;
 
-function isMobilePosterSlide(slideId: string) {
-  return MOBILE_POSTER_SLIDES.has(slideId);
-}
-
 function getMobileBackAction(slide: Slide) {
-  if (slide.id === 'home') {
+  if (slide.id === 'home' || slide.id === 'precios') {
     return null;
   }
 
@@ -89,6 +103,10 @@ function getMobileBackAction(slide: Slide) {
 }
 
 function getMobileNextAction(slide: Slide) {
+  if (slide.id === 'home') {
+    return null;
+  }
+
   if (slide.id === 'productos') {
     return null;
   }
@@ -168,6 +186,11 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
         const mobileNextAction = getMobileNextAction(slide);
         const mobileComposedScene = getMobileComposedScene(slide);
         const mobileFigmaBg = MOBILE_FIGMA_BACKGROUNDS[slide.id] || null;
+        const isMobilePricingScene = slide.id === 'precios';
+        // Product slides: image fills full height (cover, sides cropped) and
+        // can be dragged sideways to peek the cropped edges, springing back.
+        const isMobileProductImage = !mobileComposedScene && !!slide.header?.activeTab;
+        const isMobileFormulaImage = slide.id.endsWith('-formula');
 
         return (
           <section
@@ -177,6 +200,9 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
             data-prev={(slide.header?.disableArrows || slide.header?.disablePrevArrow) ? "" : (slide.header?.prevSlide || "")}
             data-next={(slide.header?.disableArrows || slide.header?.disableNextArrow) ? "" : (slide.header?.nextSlide || "")}
             data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
+            data-mobile-prev={mobileBackAction?.target || ""}
+            data-mobile-next={mobileNextAction?.target || ""}
+            data-product-pan={isMobileProductImage ? "1" : ""}
           >
             <div class="slide-backdrop" aria-hidden="true">
               <img
@@ -187,6 +213,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
               />
             </div>
 
+            <div class="desktop-scroll-canvas">
             <div class="slide-frame">
               <!-- Slide Background Artwork -->
               <div class="slide-bg">
@@ -299,8 +326,9 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
                 </div>
               )}
             </div>
+            </div>
 
-            <div class:list={['mobile-stage', mobileFigmaBg && 'mobile-stage--figma']}>
+            <div class="mobile-stage">
               <div class="mobile-backdrop" aria-hidden="true">
                 <img
                   src={mobileFigmaBg
@@ -316,30 +344,62 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
                 />
               </div>
 
-              <div class="mobile-shell">
-                {!mobileComposedScene ? (
-                  <header class="mobile-nav-bar">
-                    <img src="/assets/mobile-topbar/ayni-logo.svg" alt="AYNI" class="mobile-brand-img" />
-                    <button type="button" class="mobile-menu-btn" data-mobile-menu-open aria-label="Abrir menú">
-                      <img src="/assets/mobile-topbar/menu-icon.svg" alt="" class="mobile-menu-icon" />
-                    </button>
-                  </header>
-                ) : null}
+              <div class:list={['mobile-scroll', isMobileProductImage && 'mobile-scroll--product']}>
+                {isMobilePricingScene ? (
+                  <div class="mobile-scene mobile-pricing-scene">
+                    <img
+                      src={MOBILE_PRICING_ASSETS.background}
+                      alt=""
+                      class="mobile-pricing-background"
+                    />
+                    <div class="mobile-pricing-glow" aria-hidden="true"></div>
 
-                {mobileComposedScene ? (
+                    <img
+                      src={MOBILE_PRICING_ASSETS.logo}
+                      alt="AYNI"
+                      class="mobile-pricing-logo"
+                    />
+
+                    <div class="mobile-pricing-heading">
+                      <span>DESCUBRE Y CONECTA CON</span>
+                      <strong>EL PODER DE LA NATURALEZA</strong>
+                    </div>
+
+                    <div class="mobile-pricing-products" aria-label="Productos AYNI">
+                      <img
+                        src={MOBILE_PRICING_ASSETS.moravi}
+                        alt="Moravi 360"
+                        class="mobile-pricing-product mobile-pricing-product--moravi"
+                      />
+                      <img
+                        src={MOBILE_PRICING_ASSETS.capucci}
+                        alt="Capucci 360"
+                        class="mobile-pricing-product mobile-pricing-product--capucci"
+                      />
+                      <img
+                        src={MOBILE_PRICING_ASSETS.reset}
+                        alt="Reset 360"
+                        class="mobile-pricing-product mobile-pricing-product--reset"
+                      />
+                    </div>
+
+                    <div class="mobile-pricing-cards" aria-label="Precios de paquetes AYNI">
+                      {MOBILE_PRICING_CARDS.map((card) => (
+                        <div class="mobile-pricing-card">
+                          <span class="mobile-pricing-pack">{card.pack}</span>
+                          <strong class="mobile-pricing-price">{card.price}</strong>
+                          <span class="mobile-pricing-points">{card.points}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : mobileComposedScene ? (
                   <div class:list={['mobile-scene', 'mobile-composed-scene', `mobile-composed-scene--${mobileComposedScene.id}`]}>
                     <img
                       src={mobileComposedScene.background}
                       alt={slide.name}
                       class="mobile-composed-scene-bg"
                     />
-
-                    <header class="mobile-nav-bar mobile-nav-bar--overlay">
-                      <img src="/assets/mobile-topbar/ayni-logo.svg" alt="AYNI" class="mobile-brand-img" />
-                      <button type="button" class="mobile-menu-btn" data-mobile-menu-open aria-label="Abrir menú">
-                        <img src="/assets/mobile-topbar/menu-icon.svg" alt="" class="mobile-menu-icon" />
-                      </button>
-                    </header>
 
                     <div
                       class="mobile-composed-stack"
@@ -365,55 +425,53 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
                         )
                       ))}
                     </div>
-
-                    {mobileComposedScene.footer && (
-                      <footer class="mobile-composed-footer">
-                        <a href={`#${mobileComposedScene.footer.backTarget}`} class="mobile-composed-footer-link mobile-composed-footer-link--back">
-                          <img src="/assets/mobile-arrow-left.svg" alt="" class="mobile-composed-footer-icon" />
-                          <span>Atrás</span>
-                        </a>
-
-                        {mobileComposedScene.footer.nextTarget && (
-                          <a href={`#${mobileComposedScene.footer.nextTarget}`} class="mobile-composed-footer-link mobile-composed-footer-link--next">
-                            <span>Siguiente</span>
-                            <img src="/assets/mobile-arrow-right.svg" alt="" class="mobile-composed-footer-icon" />
-                          </a>
-                        )}
-                      </footer>
-                    )}
                   </div>
-                ) : mobileFigmaBg ? (
-                  <div class="mobile-scene mobile-figma-scene" />
                 ) : (
-                  <div class:list={['mobile-scene', 'mobile-poster-scene', isMobilePosterSlide(slide.id) && 'mobile-poster-scene--full']}>
-                    <div class="mobile-poster-frame">
-                      <img src={slide.bgImage} alt={slide.name} class="mobile-poster-image" />
-                    </div>
+                  <div class:list={[
+                    'mobile-scene',
+                    'mobile-image-scene',
+                    isMobileProductImage && 'mobile-image-scene--product',
+                    isMobileFormulaImage && 'mobile-image-scene--formula',
+                  ]}>
+                    <img
+                      src={mobileFigmaBg || slide.bgImage}
+                      alt={slide.name}
+                      class:list={['mobile-slide-image', isMobileProductImage && 'mobile-slide-image--product']}
+                      loading="eager"
+                    />
                   </div>
-                )}
-
-                {slide.id !== 'home' && !mobileComposedScene && (
-                  <footer class="mobile-footer">
-                    {mobileBackAction ? (
-                      <a href={`#${mobileBackAction.target}`} class="mobile-footer-link">
-                        <img src="/assets/mobile-arrow-left.svg" alt="" class="mobile-footer-icon" />
-                        <span>{mobileBackAction.label}</span>
-                      </a>
-                    ) : (
-                      <span class="mobile-footer-link mobile-footer-link--hidden">Atrás</span>
-                    )}
-
-                    {mobileNextAction ? (
-                      <a href={`#${mobileNextAction.target}`} class="mobile-footer-link mobile-footer-link--next">
-                        <span>{mobileNextAction.label}</span>
-                        <img src="/assets/mobile-arrow-right.svg" alt="" class="mobile-footer-icon" />
-                      </a>
-                    ) : (
-                      <span class="mobile-footer-link mobile-footer-link--hidden">Siguiente</span>
-                    )}
-                  </footer>
                 )}
               </div>
+
+              <header class="mobile-nav-bar">
+                <button type="button" class="mobile-menu-btn" data-mobile-menu-open aria-label="Abrir menú">
+                  <img src="/assets/mobile-topbar/menu-icon.svg" alt="" class="mobile-menu-icon" />
+                </button>
+              </header>
+
+              {slide.id !== 'home' && (
+                <footer class="mobile-footer">
+                  {mobileBackAction ? (
+                    <a href={`#${mobileBackAction.target}`} class="mobile-footer-link">
+                      <img src="/assets/mobile-arrow-left.svg" alt="" class="mobile-footer-icon" />
+                      <span>{mobileBackAction.label}</span>
+                    </a>
+                  ) : slide.id !== 'precios' ? (
+                    <span class="mobile-footer-link mobile-footer-link--hidden">Atrás</span>
+                  ) : null}
+
+                  {mobileNextAction ? (
+                    <a href={`#${mobileNextAction.target}`} class="mobile-footer-link mobile-footer-link--next">
+                      <span>{mobileNextAction.label}</span>
+                      {slide.id !== 'precios' && (
+                        <img src="/assets/mobile-arrow-right.svg" alt="" class="mobile-footer-icon" />
+                      )}
+                    </a>
+                  ) : (
+                    <span class="mobile-footer-link mobile-footer-link--hidden mobile-footer-link--next">Siguiente</span>
+                  )}
+                </footer>
+              )}
             </div>
           </section>
         );
@@ -484,6 +542,43 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     will-change: transform;
   }
 
+  .desktop-scroll-canvas {
+    display: contents;
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] {
+    overflow: auto;
+    overscroll-behavior: auto;
+    scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
+    scrollbar-width: thin;
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.72);
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+    background: #f3c864;
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] .desktop-scroll-canvas {
+    position: relative;
+    display: block;
+    width: var(--slide-rendered-width);
+    height: var(--slide-rendered-height);
+  }
+
+  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] .slide-frame {
+    transform: scale(var(--slide-frame-scale));
+  }
+
   .mobile-stage {
     display: none;
     position: absolute;
@@ -528,55 +623,41 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     display: none;
   }
 
-  .mobile-stage--figma .mobile-backdrop-img {
-    filter: none;
-    transform: none;
-    opacity: 1;
-    object-position: center center;
-  }
+  /* ---- Unified mobile shell (navbar + scroll + footer) ---- */
 
-  .mobile-figma-scene {
-    flex: 1;
-  }
-
-  .mobile-shell {
-    position: relative;
+  .mobile-scroll {
+    position: absolute;
+    inset: 0;
     z-index: 2;
-    display: flex;
-    width: 100%;
-    min-height: 100%;
-    margin: 0 auto;
-    flex-direction: column;
-    padding: max(0px, env(safe-area-inset-top)) 0 max(0px, env(safe-area-inset-bottom));
-    background: transparent;
-    box-shadow: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* Image/content starts at the very top, under the pinned navbar
+       (the artwork already reserves space for the top bar). */
+    padding-top: 0;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .slide[data-slide-id='home'] .mobile-scroll,
+  .slide[data-slide-id='precios'] .mobile-scroll {
+    padding-bottom: 0;
   }
 
   .mobile-nav-bar {
     box-sizing: border-box;
-    display: flex;
-    width: 100%;
-    flex: 0 0 auto;
-    height: 56px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5.78px 16px;
-    background: #000000;
-    line-height: 1;
-  }
-
-  .mobile-nav-bar--overlay {
     position: absolute;
     top: 0;
     right: 0;
     left: 0;
-    z-index: 4;
-  }
-
-  .mobile-brand-img {
-    display: block;
-    width: 98px;
-    height: 24px;
+    z-index: 5;
+    display: flex;
+    width: 100%;
+    height: 56px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    background: #000000;
+    line-height: 1;
   }
 
   .mobile-menu-btn,
@@ -592,8 +673,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-menu-btn {
     display: inline-flex;
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
     align-items: center;
     justify-content: center;
     padding: 0;
@@ -601,24 +682,78 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-menu-icon {
     display: block;
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
   }
 
   .mobile-scene {
-    display: flex;
-    min-height: 0;
-    flex: 1;
-    flex-direction: column;
+    width: 100%;
   }
 
+  /* Slide image: fit width, scroll vertically to reveal the rest */
+  .mobile-image-scene {
+    display: block;
+    width: 100%;
+  }
 
+  .mobile-slide-image {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Product artwork is a real two-axis scroll area. The browser keeps the
+     current position and handles the elastic edge only beyond valid bounds. */
+  .mobile-scroll--product {
+    overflow: auto;
+    overscroll-behavior: auto;
+    touch-action: pan-x pan-y;
+    scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
+    scrollbar-width: thin;
+  }
+
+  .mobile-scroll--product::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .mobile-scroll--product::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.72);
+  }
+
+  .mobile-scroll--product::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+    background: #f3c864;
+  }
+
+  .mobile-image-scene--product {
+    display: block;
+    width: max(125vw, 390px);
+  }
+
+  /* Formula slides are also product scenes; scope the override to the double
+     class so it wins on intent, not on declaration order. */
+  .mobile-image-scene--product.mobile-image-scene--formula {
+    width: max(106vw, 390px);
+    margin-top: 56px;
+  }
+
+  .mobile-slide-image--product {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Home / Productos: interactive stacked cards, full-width, scrollable */
   .mobile-composed-scene {
     position: relative;
     width: 100%;
-    max-width: min(100%, calc(var(--mobile-vh, 100vh) * 0.4626));
     aspect-ratio: 390 / 844;
-    flex: 0 0 auto;
     margin: 0 auto;
     overflow: hidden;
     background: #000000;
@@ -633,11 +768,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     height: 100%;
     object-fit: cover;
     object-position: center center;
-  }
-
-  .mobile-composed-scene .mobile-nav-bar {
-    height: 14.358974cqw;
-    padding: 1.481481cqw 4.102564cqw;
   }
 
   .mobile-composed-stack {
@@ -672,102 +802,235 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     object-position: center center;
   }
 
-  .mobile-composed-footer {
+  /* Pricing: responsive reconstruction of the 390x844 Figma frame. */
+  .mobile-pricing-scene {
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+    aspect-ratio: 390 / 844;
+    overflow: hidden;
+    background-color: #000000;
+    background-image: url('/assets/mobile-pricing/background.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    container-type: inline-size;
+  }
+
+  .mobile-pricing-background {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    object-fit: fill;
+    object-position: center center;
+    pointer-events: none;
+  }
+
+  .mobile-pricing-glow {
+    position: absolute;
+    top: 41.025641cqw;
+    left: 50%;
+    z-index: 1;
+    width: 92.307692cqw;
+    height: 123.076923cqw;
+    background: radial-gradient(ellipse at center, rgba(243, 200, 100, 0.14) 0%, rgba(243, 200, 100, 0.055) 34%, transparent 72%);
+    filter: blur(3.076923cqw);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .mobile-pricing-logo {
+    position: absolute;
+    top: 14.358974cqw;
+    left: 50%;
+    z-index: 2;
+    display: block;
+    width: 31.025641cqw;
+    height: auto;
+    transform: translateX(-50%);
+  }
+
+  .mobile-pricing-heading {
+    position: absolute;
+    top: 60cqw;
+    left: 6.794872cqw;
+    z-index: 3;
+    display: flex;
+    width: 86.410256cqw;
+    height: 13.333333cqw;
+    flex-direction: column;
+    align-items: stretch;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .mobile-pricing-heading span {
+    height: 5.641026cqw;
+    font-family: 'Inter', sans-serif;
+    font-size: 4.615385cqw;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 5.641026cqw;
+  }
+
+  .mobile-pricing-heading strong {
+    height: 7.692308cqw;
+    color: #f3c864;
+    font-family: 'Poppins', sans-serif;
+    font-size: 5.128205cqw;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 7.692308cqw;
+  }
+
+  .mobile-pricing-products {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .mobile-pricing-product {
+    position: absolute;
+    display: block;
+    height: auto;
+    filter: drop-shadow(0 2.564103cqw 4.102564cqw rgba(0, 0, 0, 0.56));
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .mobile-pricing-product--moravi {
+    top: 89.230769cqw;
+    left: -2.051282cqw;
+    width: 47.179487cqw;
+    transform: rotate(-3deg);
+  }
+
+  .mobile-pricing-product--capucci {
+    top: 83.076923cqw;
+    left: 21.538462cqw;
+    z-index: 2;
+    width: 55.641026cqw;
+  }
+
+  .mobile-pricing-product--reset {
+    top: 89.230769cqw;
+    left: 52.564103cqw;
+    width: 47.179487cqw;
+    transform: rotate(3deg);
+  }
+
+  .mobile-pricing-cards {
+    position: absolute;
+    top: 150.512821cqw;
+    left: 4.102564cqw;
+    z-index: 4;
+    display: grid;
+    box-sizing: border-box;
+    width: 91.794872cqw;
+    height: 25.641026cqw;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5.128205cqw;
+  }
+
+  .mobile-pricing-card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    box-sizing: border-box;
+    height: 25.641026cqw;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 4.102564cqw;
+    overflow: visible;
+    border: 1px solid #f3c864;
+    border-radius: 2.051282cqw;
+    background: linear-gradient(109.06deg, #f3c864 -25.89%, #000000 18.03%, #000000 81.48%, #f3c864 119.13%);
+    text-align: center;
+  }
+
+  .mobile-pricing-card::before,
+  .mobile-pricing-card::after {
+    position: absolute;
+    left: 50%;
+    z-index: -1;
+    width: 25.128205cqw;
+    height: 0.769231cqw;
+    border-radius: 999px;
+    background: linear-gradient(90.1deg, #574726 0.09%, #f3c864 50.01%, #5c4c28 97.52%);
+    filter: blur(1.25px);
+    content: '';
+    transform: translateX(-50%);
+  }
+
+  .mobile-pricing-card::before {
+    top: -1px;
+  }
+
+  .mobile-pricing-card::after {
+    bottom: -1px;
+  }
+
+  .mobile-pricing-pack,
+  .mobile-pricing-points {
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  .mobile-pricing-pack {
+    height: 4.358974cqw;
+    font-size: 3.589744cqw;
+    line-height: 4.358974cqw;
+  }
+
+  .mobile-pricing-price {
+    height: 9.230769cqw;
+    color: #f3c864;
+    font-family: 'Poppins', sans-serif;
+    font-size: 6.153846cqw;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 9.230769cqw;
+  }
+
+  .mobile-pricing-points {
+    height: 3.846154cqw;
+    font-size: 3.076923cqw;
+    line-height: 3.846154cqw;
+  }
+
+  .slide[data-slide-id='precios'] .mobile-footer-link {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .mobile-footer {
+    box-sizing: border-box;
     position: absolute;
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 14.358974cqw;
-    padding: 1.481481cqw 4.102564cqw;
-    background: #000000;
-  }
-
-  .mobile-composed-footer-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 2.051282cqw;
-    color: #f3c864;
-    font-size: 5.128205cqw;
-    font-weight: 400;
-    line-height: 7.179487cqw;
-    text-decoration: none;
-  }
-
-  .mobile-composed-footer-link--back {
-    min-width: 21.538462cqw;
-  }
-
-  .mobile-composed-footer-link--next {
-    min-width: 32.820513cqw;
-    margin-left: auto;
-    justify-content: flex-end;
-  }
-
-  .mobile-composed-footer-icon {
-    width: 6.153846cqw;
-    height: 6.153846cqw;
-    object-fit: contain;
-  }
-
-  .slide[data-slide-id='home'] .mobile-shell,
-  .slide[data-slide-id='productos'] .mobile-shell {
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-  }
-
-  .slide[data-slide-id='bonos-1'] .mobile-shell,
-  .slide[data-slide-id='bonos-2'] .mobile-shell,
-  .slide[data-slide-id='capucci-360'] .mobile-shell,
-  .slide[data-slide-id='moravi-360'] .mobile-shell,
-  .slide[data-slide-id='reset-360'] .mobile-shell,
-  .slide[data-slide-id='capucci-formula'] .mobile-shell,
-  .slide[data-slide-id='moravi-formula'] .mobile-shell,
-  .slide[data-slide-id='reset-formula'] .mobile-shell,
-  .slide[data-slide-id='precios'] .mobile-shell {
-    padding: 0;
-  }
-
-  .mobile-poster-scene {
-    justify-content: center;
-    padding: 10px 16px 8px;
-  }
-
-  .mobile-poster-scene--full {
-    justify-content: flex-start;
-    padding-top: 6px;
-  }
-
-  .mobile-poster-frame {
-    min-height: 0;
-    flex: 1;
-    overflow: hidden;
-    border-radius: 8px;
-    border: 1px solid rgba(243, 200, 100, 0.22);
-    background: rgba(0, 0, 0, 0.42);
-  }
-
-  .mobile-poster-image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-  }
-
-  .mobile-footer {
+    z-index: 5;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    width: 100%;
     height: 56px;
-    padding: 5.78px 16px;
+    padding: 0 16px;
     border-top: 1px solid rgba(243, 200, 100, 0.16);
     background: #000000;
+    transition: transform 0.3s ease;
+  }
+
+  /* On scroll-down the bar only "peeks" away (~40%), never fully hidden;
+     it returns fully when the user stops scrolling or scrolls up. */
+  html.mobile-nav-peek .mobile-footer {
+    transform: translateY(40%);
   }
 
   .mobile-footer-link {
@@ -1090,6 +1353,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   const wrapper = document.getElementById('presentation-wrapper');
   const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
   const mobileBreakpoint = 1024;
+  const tabletBreakpoint = 1440;
+  const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
 
   function setMobileMenuOpen(isOpen) {
     const shouldOpen = Boolean(isOpen) && root.dataset.presentationMode === 'mobile';
@@ -1102,18 +1367,31 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   function resizePresentation() {
     if (!wrapper) return;
 
+    const previousMode = root.dataset.presentationMode;
     const baseWidth = 1920;
     const baseHeight = 1080;
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const isMobile = windowWidth <= mobileBreakpoint;
+    const isTouchDevice = navigator.maxTouchPoints > 0 || coarsePointerQuery.matches;
+    const isMobile = windowWidth <= mobileBreakpoint
+      || (isTouchDevice && windowWidth <= tabletBreakpoint);
 
     if (isMobile) {
       root.dataset.presentationMode = 'mobile';
       root.style.setProperty('--slide-frame-scale', '1');
       root.style.setProperty('--slide-frame-left', '0px');
       root.style.setProperty('--slide-frame-top', '0px');
+      root.style.setProperty('--slide-rendered-width', `${baseWidth}px`);
+      root.style.setProperty('--slide-rendered-height', `${baseHeight}px`);
       root.style.setProperty('--mobile-vh', `${windowHeight}px`);
+      if (previousMode && previousMode !== 'mobile') {
+        requestAnimationFrame(() => {
+          const scroller = document.querySelector('.slide.active .mobile-scroll--product');
+          if (scroller instanceof HTMLElement) {
+            scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
+          }
+        });
+      }
       return;
     }
 
@@ -1128,6 +1406,19 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     root.style.setProperty('--slide-frame-scale', String(scale));
     root.style.setProperty('--slide-frame-left', `${frameLeft}px`);
     root.style.setProperty('--slide-frame-top', `${frameTop}px`);
+    root.style.setProperty('--slide-rendered-width', `${frameWidth}px`);
+    root.style.setProperty('--slide-rendered-height', `${frameHeight}px`);
+    if (previousMode && previousMode !== 'desktop') {
+      requestAnimationFrame(() => {
+        const slide = document.querySelector('.slide.active[data-product-pan="1"]');
+        if (slide instanceof HTMLElement) {
+          slide.scrollTo({
+            left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
+            top: Math.max(0, (slide.scrollHeight - slide.clientHeight) / 2),
+          });
+        }
+      });
+    }
   }
 
   window.addEventListener('resize', resizePresentation);
@@ -1151,7 +1442,30 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       targetSlide.classList.add('active');
       activeSlideId = targetId;
       setMobileMenuOpen(false);
+
+      // Each slide opens at the top. Product artwork uses real scroll and
+      // starts horizontally centered when its content is wider than the view.
+      root.classList.remove('mobile-nav-peek');
+      const scroller = targetSlide.querySelector('.mobile-scroll');
+      if (scroller) {
+        scroller.scrollTop = 0;
+        if (scroller.classList.contains('mobile-scroll--product')) {
+          requestAnimationFrame(() => {
+            scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
+          });
+        }
+      }
+
       resizePresentation();
+      if (targetSlide.getAttribute('data-product-pan')) {
+        requestAnimationFrame(() => {
+          if (root.dataset.presentationMode !== 'desktop') return;
+          targetSlide.scrollTo({
+            left: Math.max(0, (targetSlide.scrollWidth - targetSlide.clientWidth) / 2),
+            top: Math.max(0, (targetSlide.scrollHeight - targetSlide.clientHeight) / 2),
+          });
+        });
+      }
     }
   }
 
@@ -1240,8 +1554,16 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       const currentSlide = document.getElementById(`slide-${activeSlideId}`);
       if (!currentSlide) return;
 
-      const prev = currentSlide.getAttribute('data-prev');
-      const next = currentSlide.getAttribute('data-next');
+      // Product slides use native two-axis scroll, so a sideways gesture there
+      // belongs to the artwork rather than to slide navigation.
+      if (currentSlide.getAttribute('data-product-pan')) {
+        return;
+      }
+
+      // On mobile, swipe follows the same prev/next as the bottom bar.
+      const isMobile = root.dataset.presentationMode === 'mobile';
+      const prev = currentSlide.getAttribute(isMobile ? 'data-mobile-prev' : 'data-prev');
+      const next = currentSlide.getAttribute(isMobile ? 'data-mobile-next' : 'data-next');
 
       if (deltaX < 0) {
         if (next) {
@@ -1254,4 +1576,120 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       }
     }
   }
+
+
+  // Bottom Atrás/Siguiente bar: on scroll-down it only peeks away (~40%),
+  // and returns fully when the user stops scrolling (idle) or scrolls up.
+  const SCROLL_PEEK_THRESHOLD = 8;
+  const NAV_IDLE_REVEAL_MS = 500;
+  const PRODUCT_RETURN_DELAY_MS = 140;
+  let navIdleTimer;
+
+  function setNavPeek(peek) {
+    root.classList.toggle('mobile-nav-peek', Boolean(peek));
+  }
+
+  function setupProductAutoReturn(element, presentationMode, getHomePosition) {
+    let idleTimer;
+    let returnFrame = 0;
+    let isReturning = false;
+    let interactionActive = false;
+
+    const cancelReturn = () => {
+      clearTimeout(idleTimer);
+      cancelAnimationFrame(returnFrame);
+      isReturning = false;
+    };
+
+    const returnHome = () => {
+      if (root.dataset.presentationMode !== presentationMode) return;
+
+      const target = getHomePosition();
+      const deltaLeft = target.left - element.scrollLeft;
+      const deltaTop = target.top - element.scrollTop;
+
+      if (Math.abs(deltaLeft) < 0.5 && Math.abs(deltaTop) < 0.5) return;
+
+      // Snap straight back, no animation. Ignore the scroll event this triggers
+      // so it does not reschedule another return.
+      isReturning = true;
+      element.scrollLeft = target.left;
+      element.scrollTop = target.top;
+      returnFrame = requestAnimationFrame(() => { isReturning = false; });
+    };
+
+    const scheduleReturn = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(returnHome, PRODUCT_RETURN_DELAY_MS);
+    };
+
+    element.addEventListener('scroll', () => {
+      if (isReturning || interactionActive || root.dataset.presentationMode !== presentationMode) return;
+      scheduleReturn();
+    }, { passive: true });
+
+    const beginInteraction = () => {
+      interactionActive = true;
+      cancelReturn();
+    };
+
+    const finishInteraction = () => {
+      if (!interactionActive) return;
+      interactionActive = false;
+      scheduleReturn();
+    };
+
+    element.addEventListener('touchstart', beginInteraction, { passive: true });
+    element.addEventListener('touchend', finishInteraction, { passive: true });
+    element.addEventListener('touchcancel', finishInteraction, { passive: true });
+    element.addEventListener('pointerdown', beginInteraction);
+    element.addEventListener('pointerup', finishInteraction);
+    element.addEventListener('pointercancel', finishInteraction);
+    element.addEventListener('wheel', cancelReturn, { passive: true });
+  }
+
+  document.querySelectorAll('.mobile-scroll--product').forEach((scroller) => {
+    if (!(scroller instanceof HTMLElement)) return;
+    setupProductAutoReturn(scroller, 'mobile', () => ({
+      left: Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2),
+      top: scroller.scrollTop,
+    }));
+  });
+
+  document.querySelectorAll('.slide[data-product-pan="1"]').forEach((slide) => {
+    if (!(slide instanceof HTMLElement)) return;
+    // Recenter horizontally only; keep the vertical position so the user can
+    // stay scrolled to read tall product/formula artwork on desktop.
+    setupProductAutoReturn(slide, 'desktop', () => ({
+      left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
+      top: slide.scrollTop,
+    }));
+  });
+
+  document.querySelectorAll('.mobile-scroll').forEach((scroller) => {
+    if (!(scroller instanceof HTMLElement)) return;
+    if (scroller.classList.contains('mobile-scroll--product')) return;
+    if (scroller.closest('[data-slide-id="precios"]')) return;
+    let lastScrollTop = 0;
+
+    scroller.addEventListener('scroll', () => {
+      if (root.dataset.presentationMode !== 'mobile') return;
+
+      const current = scroller.scrollTop;
+
+      if (current <= 4) {
+        setNavPeek(false);
+      } else if (current > lastScrollTop + SCROLL_PEEK_THRESHOLD) {
+        setNavPeek(true);
+      } else if (current < lastScrollTop - SCROLL_PEEK_THRESHOLD) {
+        setNavPeek(false);
+      }
+
+      lastScrollTop = current;
+
+      // Reveal the bar again once scrolling settles.
+      clearTimeout(navIdleTimer);
+      navIdleTimer = setTimeout(() => setNavPeek(false), NAV_IDLE_REVEAL_MS);
+    }, { passive: true });
+  });
 </script>

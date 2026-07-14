@@ -35,7 +35,7 @@ const {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- iOS PWA Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -65,19 +65,37 @@ const {
     <script>
       import { registerSW } from 'virtual:pwa-register';
 
-      // Register service worker and handle dynamic updates
-      const updateSW = registerSW({
-        onNeedRefresh() {
-          // Fire custom event so our UI component can catch it and display the refresh banner
-          window.dispatchEvent(new CustomEvent('pwa-update-available', {
-            detail: { updateSW }
-          }));
-        },
-        onOfflineReady() {
-          console.log('App ready to work offline!');
-          window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
-        },
-      });
+      if (import.meta.env.DEV) {
+        // Remove workers left behind by an older local PWA build. Otherwise
+        // localhost can keep rendering stale HTML and assets during development.
+        if ('serviceWorker' in navigator) {
+          void navigator.serviceWorker.getRegistrations().then((registrations) =>
+            Promise.all(registrations.map((registration) => registration.unregister()))
+          );
+        }
+
+        if ('caches' in window) {
+          void caches.keys().then((keys) =>
+            Promise.all(keys.map((key) => caches.delete(key)))
+          );
+        }
+      } else {
+        // Production activates new builds immediately. Keep the event as a
+        // fallback for browsers that still report a waiting worker.
+        const updateSW = registerSW({
+          immediate: true,
+          onNeedRefresh() {
+            void updateSW(true);
+            window.dispatchEvent(new CustomEvent('pwa-update-available', {
+              detail: { updateSW }
+            }));
+          },
+          onOfflineReady() {
+            console.log('App ready to work offline!');
+            window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
+          },
+        });
+      }
     </script>
     
     <style is:global>

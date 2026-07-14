@@ -40,6 +40,9 @@ export default defineConfig({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{html,js,css,svg,png,ico,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/offline.html',
@@ -58,8 +61,9 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
-        navigateFallbackAllowlist: [/^\/offline.html$/]
+        // A development service worker can keep serving an older presentation
+        // after the source changes. PWA behavior is verified from the build.
+        enabled: false
       }
     })
   ]
