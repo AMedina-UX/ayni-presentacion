@@ -30,13 +30,13 @@ const MOBILE_PRICING_ASSETS = {
 
 const MOBILE_PRICING_CARDS = [
   {
-    pack: '05 DOYPACK',
-    price: 'S/.450.00',
-    points: '60 PUNTOS',
+    pack: '08 DOYPACK',
+    price: 's/450.00',
+    points: '100 PUNTOS',
   },
   {
     pack: '08 DOYPACK',
-    price: 'S/.720.00',
+    price: 's/720.00',
     points: '100 PUNTOS',
   },
 ] as const;
@@ -331,7 +331,9 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
             <div class="mobile-stage">
               <div class="mobile-backdrop" aria-hidden="true">
                 <img
-                  src={mobileFigmaBg
+                  src={isMobilePricingScene
+                    ? MOBILE_PRICING_ASSETS.background
+                    : mobileFigmaBg
                     || mobileComposedScene?.background
                     || (slide.id === 'home'
                       ? MOBILE_HOME_BACKGROUND
@@ -403,7 +405,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
                     <div
                       class="mobile-composed-stack"
-                      style={`top: ${toMobileCqw(mobileComposedScene.stackTop)};`}
+                      style={`--mobile-stack-top: ${toMobileCqw(mobileComposedScene.stackTop)};`}
                     >
                       {mobileComposedScene.cards.map((card) => (
                         card.linkTo ? (
@@ -484,6 +486,11 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     <div class="mobile-menu-panel" role="dialog" aria-modal="true" aria-label="Menu de navegacion">
       <div class="mobile-menu-content">
         <div class="mobile-menu-header">
+          <img
+            src="/assets/mobile-menu/ayni-logo.png"
+            alt="AYNI"
+            class="mobile-menu-brand"
+          />
           <button type="button" class="mobile-menu-close" data-mobile-menu-close aria-label="Cerrar menú">
             <img src="/assets/mobile-topbar/close-icon.svg" alt="" />
           </button>
@@ -498,6 +505,21 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
           <a href="#capucci-360" class="mobile-menu-link" data-mobile-menu-link>Capucci 360</a>
           <a href="#moravi-360" class="mobile-menu-link" data-mobile-menu-link>Moravi 360</a>
           <a href="#reset-360" class="mobile-menu-link" data-mobile-menu-link>Reset 360</a>
+          <div class="mobile-menu-divider" aria-hidden="true"></div>
+          <a
+            href="https://worldgen.vip/"
+            class="mobile-menu-worldgen"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-mobile-menu-link
+            aria-label="Visitar el sitio web de World GEN"
+          >
+            <img
+              src="/assets/mobile-menu/worldgen-logo.png"
+              alt="World GEN"
+              class="mobile-menu-worldgen-logo"
+            />
+          </a>
         </nav>
       </div>
 
@@ -546,36 +568,36 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     display: contents;
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] {
+  html[data-presentation-mode='desktop'] .slide {
     overflow: auto;
     overscroll-behavior: auto;
     scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
     scrollbar-width: thin;
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  html[data-presentation-mode='desktop'] .slide::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar-track {
+  html[data-presentation-mode='desktop'] .slide::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.72);
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1']::-webkit-scrollbar-thumb {
+  html[data-presentation-mode='desktop'] .slide::-webkit-scrollbar-thumb {
     border: 2px solid rgba(0, 0, 0, 0.72);
     border-radius: 999px;
     background: #f3c864;
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] .desktop-scroll-canvas {
+  html[data-presentation-mode='desktop'] .slide .desktop-scroll-canvas {
     position: relative;
     display: block;
     width: var(--slide-rendered-width);
     height: var(--slide-rendered-height);
   }
 
-  html[data-presentation-mode='desktop'] .slide[data-product-pan='1'] .slide-frame {
+  html[data-presentation-mode='desktop'] .slide .slide-frame {
     transform: scale(var(--slide-frame-scale));
   }
 
@@ -632,10 +654,27 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
+    scrollbar-width: thin;
     /* Image/content starts at the very top, under the pinned navbar
        (the artwork already reserves space for the top bar). */
     padding-top: 0;
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .mobile-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.72);
+  }
+
+  .mobile-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(0, 0, 0, 0.72);
+    border-radius: 999px;
+    background: #f3c864;
   }
 
   .slide[data-slide-id='home'] .mobile-scroll,
@@ -702,41 +741,66 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     height: auto;
   }
 
+  /* Both bonus artworks are 9:16 posters. Their responsive canvas fills tall
+     phones, keeps at least the full viewport width on tablets, and remains a
+     real vertical scroll area so content hidden behind the fixed bars can be
+     reached naturally. */
+  .slide:is([data-slide-id='bonos-1'], [data-slide-id='bonos-2']) .mobile-scroll {
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .slide:is([data-slide-id='bonos-1'], [data-slide-id='bonos-2']) .mobile-image-scene {
+    position: relative;
+    left: 50%;
+    width: max(100%, calc(var(--mobile-vh) * 0.5625));
+    max-width: none;
+    transform: translateX(-50%);
+  }
+
+  .slide:is([data-slide-id='bonos-1'], [data-slide-id='bonos-2']) .mobile-slide-image {
+    width: 100%;
+    height: auto;
+    max-width: none;
+  }
+
   /* Product artwork is a real two-axis scroll area. The browser keeps the
      current position and handles the elastic edge only beyond valid bounds. */
   .mobile-scroll--product {
     overflow: auto;
     overscroll-behavior: auto;
     touch-action: pan-x pan-y;
-    scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
-    scrollbar-width: thin;
-  }
-
-  .mobile-scroll--product::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .mobile-scroll--product::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.72);
-  }
-
-  .mobile-scroll--product::-webkit-scrollbar-thumb {
-    border: 2px solid rgba(0, 0, 0, 0.72);
-    border-radius: 999px;
-    background: #f3c864;
   }
 
   .mobile-image-scene--product {
     display: block;
-    width: max(125vw, 390px);
+    width: max(125vw, 390px, calc((var(--mobile-vh) - 56px) * 0.5625));
+  }
+
+  .slide[data-slide-id='reset-360'] .mobile-image-scene--product {
+    width: max(122vw, 390px, calc((var(--mobile-vh) - 50px) * 0.5625));
+    margin-top: -6px;
+    margin-left: 8px;
   }
 
   /* Formula slides are also product scenes; scope the override to the double
      class so it wins on intent, not on declaration order. */
   .mobile-image-scene--product.mobile-image-scene--formula {
-    width: max(106vw, 390px);
+    width: max(106vw, 390px, calc((var(--mobile-vh) - 112px) * 0.5625));
     margin-top: 56px;
+  }
+
+  .slide[data-slide-id='moravi-formula'] .mobile-image-scene--formula {
+    width: max(112vw, 390px, calc((var(--mobile-vh) - 65px) * 0.5625));
+    margin-top: 9px;
+    margin-right: 7px;
+  }
+  .slide[data-slide-id='reset-formula'] .mobile-image-scene--formula {
+    width: max(112vw, 390px, calc((var(--mobile-vh) - 75px) * 0.5625));
+    margin-top: 19px;
   }
 
   .mobile-slide-image--product {
@@ -754,10 +818,19 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     position: relative;
     width: 100%;
     aspect-ratio: 390 / 844;
+    min-height: var(--mobile-vh);
     margin: 0 auto;
     overflow: hidden;
     background: #000000;
     container-type: inline-size;
+  }
+
+  /* Productos has a fixed 56px footer. Its artwork fills the remaining
+     viewport, while retaining the original 390px composition on short
+     screens where vertical scrolling is still required. */
+  .mobile-composed-scene--productos {
+    aspect-ratio: 390 / 788;
+    min-height: calc(var(--mobile-vh) - 56px - env(safe-area-inset-bottom));
   }
 
   .mobile-composed-scene-bg {
@@ -772,12 +845,24 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-composed-stack {
     position: absolute;
+    top: var(--mobile-stack-top);
     left: 4.102564cqw;
     z-index: 2;
     display: flex;
     width: 91.794872cqw;
     flex-direction: column;
     gap: 4.102564cqw;
+  }
+
+  /* Keep the card group at its Figma position on regular phones. On unusually
+     tall screens, distribute the additional height equally above and below
+     the group instead of leaving all of it as an empty strip at the bottom. */
+  .mobile-composed-scene--home .mobile-composed-stack {
+    top: max(var(--mobile-stack-top), calc(50% - 38.717949cqw));
+  }
+
+  .mobile-composed-scene--productos .mobile-composed-stack {
+    top: max(var(--mobile-stack-top), calc(50% - 34.358974cqw));
   }
 
   .mobile-composed-card,
@@ -831,13 +916,16 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-glow {
     position: absolute;
-    top: 41.025641cqw;
-    left: 50%;
-    z-index: 1;
-    width: 92.307692cqw;
-    height: 123.076923cqw;
-    background: radial-gradient(ellipse at center, rgba(243, 200, 100, 0.14) 0%, rgba(243, 200, 100, 0.055) 34%, transparent 72%);
-    filter: blur(3.076923cqw);
+    top: 84.5667cqw;
+    left: calc(50% - 2.51282cqw);
+    z-index: 2;
+    width: 46.2872cqw;
+    height: 24.5641cqw;
+    border-radius: 686.126cqw;
+    opacity: 0.68;
+    background-image: initial;
+    background-color: #f3c86373;
+    filter: blur(7.692308cqw);
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -904,9 +992,9 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-product--moravi {
     top: 89.230769cqw;
-    left: -2.051282cqw;
+    left: 0.512821cqw;
     width: 47.179487cqw;
-    transform: rotate(-3deg);
+    transform: rotate(-7deg) scale(1.04);
   }
 
   .mobile-pricing-product--capucci {
@@ -914,13 +1002,14 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     left: 21.538462cqw;
     z-index: 2;
     width: 55.641026cqw;
+    transform: scale(1.04);
   }
 
   .mobile-pricing-product--reset {
     top: 89.230769cqw;
-    left: 52.564103cqw;
+    left: 50cqw;
     width: 47.179487cqw;
-    transform: rotate(3deg);
+    transform: rotate(7deg) scale(1.04);
   }
 
   .mobile-pricing-cards {
@@ -946,9 +1035,9 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     align-items: stretch;
     padding: 4.102564cqw;
     overflow: visible;
-    border: 1px solid #f3c864;
+    border: 1px solid #f3c863;
     border-radius: 2.051282cqw;
-    background: linear-gradient(109.06deg, #f3c864 -25.89%, #000000 18.03%, #000000 81.48%, #f3c864 119.13%);
+    background: linear-gradient(109.06deg, #f3c863 -25.89%, #000000 18.03%, #000000 81.48%, #f3c863 119.13%);
     text-align: center;
   }
 
@@ -956,22 +1045,37 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   .mobile-pricing-card::after {
     position: absolute;
     left: 50%;
-    z-index: -1;
+    z-index: 3;
     width: 25.128205cqw;
-    height: 0.769231cqw;
-    border-radius: 999px;
-    background: linear-gradient(90.1deg, #574726 0.09%, #f3c864 50.01%, #5c4c28 97.52%);
-    filter: blur(1.25px);
+    height: 2.051282cqw;
+    background:
+      radial-gradient(
+        ellipse 5.641026cqw 0.769231cqw at center,
+        rgba(243, 200, 100, 0.95) 0%,
+        rgba(168, 132, 63, 0.82) 42%,
+        rgba(92, 76, 40, 0.34) 64%,
+        transparent 78%
+      ),
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(87, 71, 38, 0.65) 14%,
+        rgba(243, 200, 100, 0.82) 50%,
+        rgba(92, 76, 40, 0.65) 86%,
+        transparent 100%
+      ) center / 100% 1px no-repeat;
+    filter: drop-shadow(0 0 0.769231cqw rgba(243, 200, 100, 0.78));
     content: '';
     transform: translateX(-50%);
+    pointer-events: none;
   }
 
   .mobile-pricing-card::before {
-    top: -1px;
+    top: -1.025641cqw;
   }
 
   .mobile-pricing-card::after {
-    bottom: -1px;
+    bottom: -1.025641cqw;
   }
 
   .mobile-pricing-pack,
@@ -1077,7 +1181,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     height: 100%;
     flex-direction: column;
     justify-content: space-between;
-    padding: 16px 0;
+    padding: 0 0 16px;
     background: rgba(0, 0, 0, 0.92);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -1087,16 +1191,26 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   .mobile-menu-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
   }
 
   .mobile-menu-header {
     display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 56px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     overflow: hidden;
     padding: 0 16px;
     background: #000000;
+  }
+
+  .mobile-menu-brand {
+    display: block;
+    width: 92px;
+    height: 27px;
+    object-fit: contain;
+    object-position: left center;
   }
 
   .mobile-menu-close {
@@ -1118,12 +1232,13 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     flex-direction: column;
     gap: 8px;
     margin: 0;
-    padding: 0;
+    padding: 24px 0 0;
     list-style: none;
   }
 
   .mobile-menu-divider {
     height: 1px;
+    margin: 0 16px;
     background: rgba(243, 200, 100, 0.25);
   }
 
@@ -1146,6 +1261,34 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     font-size: 20px;
     font-weight: 400;
     text-decoration: none;
+  }
+
+  .mobile-menu-worldgen {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    margin: 4px 16px 0 0;
+    padding: 4px 0;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .mobile-menu-worldgen:hover,
+  .mobile-menu-worldgen:focus-visible {
+    opacity: 0.82;
+    transform: translateX(2px);
+  }
+
+  .mobile-menu-worldgen:focus-visible {
+    outline: 1px solid #f3c864;
+    outline-offset: 4px;
+  }
+
+  .mobile-menu-worldgen-logo {
+    display: block;
+    width: 168px;
+    height: auto;
   }
 
   .mobile-menu-dismiss {
@@ -1408,17 +1551,15 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     root.style.setProperty('--slide-frame-top', `${frameTop}px`);
     root.style.setProperty('--slide-rendered-width', `${frameWidth}px`);
     root.style.setProperty('--slide-rendered-height', `${frameHeight}px`);
-    if (previousMode && previousMode !== 'desktop') {
-      requestAnimationFrame(() => {
-        const slide = document.querySelector('.slide.active[data-product-pan="1"]');
-        if (slide instanceof HTMLElement) {
-          slide.scrollTo({
-            left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
-            top: Math.max(0, (slide.scrollHeight - slide.clientHeight) / 2),
-          });
-        }
-      });
-    }
+    requestAnimationFrame(() => {
+      const slide = document.querySelector('.slide.active');
+      if (slide instanceof HTMLElement) {
+        slide.scrollTo({
+          left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
+          top: Math.max(0, (slide.scrollHeight - slide.clientHeight) / 2),
+        });
+      }
+    });
   }
 
   window.addEventListener('resize', resizePresentation);
@@ -1434,12 +1575,13 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     const targetSlide = document.getElementById(`slide-${targetId}`);
 
     if (targetSlide) {
-      const currentActive = document.querySelector('.slide.active');
-      if (currentActive) {
-        currentActive.classList.remove('active');
-      }
+      document.querySelectorAll('.slide.active').forEach((slide) => {
+        slide.classList.remove('active');
+        slide.setAttribute('aria-hidden', 'true');
+      });
 
       targetSlide.classList.add('active');
+      targetSlide.setAttribute('aria-hidden', 'false');
       activeSlideId = targetId;
       setMobileMenuOpen(false);
 
@@ -1457,15 +1599,13 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       }
 
       resizePresentation();
-      if (targetSlide.getAttribute('data-product-pan')) {
-        requestAnimationFrame(() => {
-          if (root.dataset.presentationMode !== 'desktop') return;
-          targetSlide.scrollTo({
-            left: Math.max(0, (targetSlide.scrollWidth - targetSlide.clientWidth) / 2),
-            top: Math.max(0, (targetSlide.scrollHeight - targetSlide.clientHeight) / 2),
-          });
+      requestAnimationFrame(() => {
+        if (root.dataset.presentationMode !== 'desktop') return;
+        targetSlide.scrollTo({
+          left: Math.max(0, (targetSlide.scrollWidth - targetSlide.clientWidth) / 2),
+          top: Math.max(0, (targetSlide.scrollHeight - targetSlide.clientHeight) / 2),
         });
-      }
+      });
     }
   }
 

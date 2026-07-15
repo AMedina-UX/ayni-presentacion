@@ -44,6 +44,9 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
         globPatterns: ['**/*.{html,js,css,svg,png,ico,woff,woff2}'],
+        // This was the former static mobile pricing poster. Keeping it out of
+        // the precache prevents an older worker from presenting it again.
+        globIgnores: ['**/mobile-products/precios-bg.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/offline.html',
         runtimeCaching: [
