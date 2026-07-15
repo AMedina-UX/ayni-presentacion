@@ -40,7 +40,13 @@ export default defineConfig({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{html,js,css,svg,png,ico,woff,woff2}'],
+        // This was the former static mobile pricing poster. Keeping it out of
+        // the precache prevents an older worker from presenting it again.
+        globIgnores: ['**/mobile-products/precios-bg.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/offline.html',
         runtimeCaching: [
@@ -58,8 +64,9 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
-        navigateFallbackAllowlist: [/^\/offline.html$/]
+        // A development service worker can keep serving an older presentation
+        // after the source changes. PWA behavior is verified from the build.
+        enabled: false
       }
     })
   ]

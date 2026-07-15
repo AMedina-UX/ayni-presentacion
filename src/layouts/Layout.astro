@@ -13,6 +13,19 @@ const {
 <!DOCTYPE html>
 <html lang="es">
   <head>
+    <script is:inline>
+      (() => {
+        const mobileBreakpoint = 1024;
+        const tabletBreakpoint = 1440;
+        const isTouchDevice = navigator.maxTouchPoints > 0
+          || window.matchMedia('(pointer: coarse)').matches;
+        const isPortrait = window.innerHeight >= window.innerWidth;
+        const isMobile = window.innerWidth <= mobileBreakpoint
+          || (isTouchDevice && isPortrait && window.innerWidth <= tabletBreakpoint);
+
+        document.documentElement.dataset.presentationMode = isMobile ? 'mobile' : 'desktop';
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -35,7 +48,7 @@ const {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- iOS PWA Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -65,19 +78,44 @@ const {
     <script>
       import { registerSW } from 'virtual:pwa-register';
 
-      // Register service worker and handle dynamic updates
-      const updateSW = registerSW({
-        onNeedRefresh() {
-          // Fire custom event so our UI component can catch it and display the refresh banner
-          window.dispatchEvent(new CustomEvent('pwa-update-available', {
-            detail: { updateSW }
-          }));
-        },
-        onOfflineReady() {
-          console.log('App ready to work offline!');
-          window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
-        },
-      });
+      if (import.meta.env.DEV) {
+        // Remove workers left behind by an older local PWA build. Otherwise
+        // localhost can keep rendering stale HTML and assets during development.
+        const hadActiveWorker = 'serviceWorker' in navigator
+          && Boolean(navigator.serviceWorker.controller);
+        const unregisterWorkers = 'serviceWorker' in navigator
+          ? navigator.serviceWorker.getRegistrations().then((registrations) =>
+              Promise.all(registrations.map((registration) => registration.unregister()))
+            )
+          : Promise.resolve([]);
+        const clearCaches = 'caches' in window
+          ? caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+          : Promise.resolve([]);
+
+        void Promise.all([unregisterWorkers, clearCaches]).then(() => {
+          const cleanupKey = 'ayni-dev-pwa-cleanup-v2';
+          if (hadActiveWorker && sessionStorage.getItem(cleanupKey) !== 'done') {
+            sessionStorage.setItem(cleanupKey, 'done');
+            window.location.reload();
+          }
+        });
+      } else {
+        // Production activates new builds immediately. Keep the event as a
+        // fallback for browsers that still report a waiting worker.
+        const updateSW = registerSW({
+          immediate: true,
+          onNeedRefresh() {
+            void updateSW(true);
+            window.dispatchEvent(new CustomEvent('pwa-update-available', {
+              detail: { updateSW }
+            }));
+          },
+          onOfflineReady() {
+            console.log('App ready to work offline!');
+            window.dispatchEvent(new CustomEvent('pwa-offline-ready'));
+          },
+        });
+      }
     </script>
     
     <style is:global>
