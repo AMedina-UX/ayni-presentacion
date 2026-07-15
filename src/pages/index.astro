@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import PWA from '../components/PWA.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
+import DesktopSlideHeader from '../components/DesktopSlideHeader.astro';
 import { SLIDES, type Slide } from '../data/slides';
 
 const MOBILE_HOME_CARD_IMAGES: Record<string, string> = {
@@ -225,84 +226,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
                 />
               </div>
 
-              <!-- Slide Header overlay (navigation & tabs) -->
-              {slide.header && (
-                <header class="slide-header">
-                  <div class="header-left">
-                    {slide.header.showClose && (
-                      (slide.header.disableClose || !slide.header.closeTo) ? (
-                        <div class="header-btn close-btn disabled" title="Cerrar Deshabilitado">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
-                            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
-                          </svg>
-                        </div>
-                      ) : (
-                        <a href={`#${slide.header.closeTo}`} class="header-btn close-btn" title="Cerrar">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" class="material-close-icon">
-                            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
-                          </svg>
-                        </a>
-                      )
-                    )}
-                    {slide.header.showArrows && (
-                      <>
-                        {(slide.header.disableArrows || slide.header.disablePrevArrow || !slide.header.prevSlide) ? (
-                          <div class="header-btn arrow-btn prev-btn disabled" title="Anterior Deshabilitado">
-                            <img src="/assets/arrow_left.svg" alt="Anterior" />
-                          </div>
-                        ) : (
-                          <a
-                            href={`#${slide.header.prevSlide}`}
-                            class="header-btn arrow-btn prev-btn"
-                            title="Anterior"
-                          >
-                            <img src="/assets/arrow_left.svg" alt="Anterior" />
-                          </a>
-                        )}
-                        {(slide.header.disableArrows || slide.header.disableNextArrow || !slide.header.nextSlide) ? (
-                          <div class="header-btn arrow-btn next-btn disabled" title="Siguiente Deshabilitado">
-                            <img src="/assets/arrow_right.svg" alt="Siguiente" />
-                          </div>
-                        ) : (
-                          <a
-                            href={`#${slide.header.nextSlide}`}
-                            class="header-btn arrow-btn next-btn"
-                            title="Siguiente"
-                          >
-                            <img src="/assets/arrow_right.svg" alt="Siguiente" />
-                          </a>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {slide.header.activeTab && (
-                    <div class="header-center">
-                      <div class="product-tabs">
-                        <a
-                          href="#capucci-360"
-                          class={`tab-pill ${slide.header.activeTab === 'capucci' ? 'active' : ''} ${slide.header.disabledTabs?.includes('capucci') ? 'disabled' : ''}`}
-                        >
-                          Capucci 360
-                        </a>
-                        <a
-                          href="#moravi-360"
-                          class={`tab-pill ${slide.header.activeTab === 'moravi' ? 'active' : ''} ${slide.header.disabledTabs?.includes('moravi') ? 'disabled' : ''}`}
-                        >
-                          Moravi 360
-                        </a>
-                        <a
-                          href="#reset-360"
-                          class={`tab-pill ${slide.header.activeTab === 'reset' ? 'active' : ''} ${slide.header.disabledTabs?.includes('reset') ? 'disabled' : ''}`}
-                        >
-                          Reset 360
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </header>
-              )}
-
               {slide.buttons && (
                 <div class="buttons-container">
                   {slide.buttons.map((btn) => (
@@ -327,6 +250,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
               )}
             </div>
             </div>
+
+            {slide.header && <DesktopSlideHeader header={slide.header} />}
 
             <div class="mobile-stage">
               <div class="mobile-backdrop" aria-hidden="true">
@@ -575,6 +500,10 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     scrollbar-width: thin;
   }
 
+  html[data-presentation-mode='desktop'][data-desktop-scale-mode='contain'] .slide {
+    overflow: hidden;
+  }
+
   html[data-presentation-mode='desktop'] .slide::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -593,12 +522,15 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   html[data-presentation-mode='desktop'] .slide .desktop-scroll-canvas {
     position: relative;
     display: block;
-    width: var(--slide-rendered-width);
-    height: var(--slide-rendered-height);
+    width: max(100%, var(--slide-rendered-width));
+    height: max(100%, var(--slide-rendered-height));
   }
 
   html[data-presentation-mode='desktop'] .slide .slide-frame {
-    transform: scale(var(--slide-frame-scale));
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transform: translate3d(-50%, -50%, 0) scale(var(--slide-frame-scale));
   }
 
   .mobile-stage {
@@ -1367,128 +1299,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     pointer-events: none;
   }
 
-  /* Slide Top Header Bar */
-  .slide-header {
-    position: absolute;
-    top: 20px;
-    left: 40px;
-    right: 40px;
-    height: 48px;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    pointer-events: none;
-  }
-
-  .header-left {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    pointer-events: auto;
-  }
-
-  .header-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(243, 200, 100, 0.2);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
-  }
-
-  .header-btn img,
-  .header-btn svg {
-    width: 20px;
-    height: 20px;
-    pointer-events: none;
-  }
-
-  .material-close-icon {
-    width: 24px;
-    height: 24px;
-    fill: #ffffff;
-    transition: fill 0.2s;
-  }
-
-  .header-btn:hover .material-close-icon {
-    fill: #f3c864;
-  }
-
-  .header-btn:hover {
-    background-color: rgba(243, 200, 100, 0.1);
-    border-color: rgba(243, 200, 100, 0.6);
-    transform: scale(1.05);
-  }
-
-  .header-btn:active {
-    transform: scale(0.95);
-  }
-
-  .header-btn.disabled {
-    pointer-events: none;
-    opacity: 0.2;
-    cursor: default;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  /* Middle Product Tabs */
-  .header-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    pointer-events: auto;
-  }
-
-  .product-tabs {
-    display: flex;
-    align-items: center;
-    border-radius: 100px;
-    background-color: rgba(243, 200, 100, 0.05);
-    border: 1px solid #f3c864;
-    padding: 2px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(243, 200, 100, 0.1);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-  }
-
-  .tab-pill {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 34px;
-    padding: 0 20px;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    color: rgba(243, 200, 100, 0.6);
-    border-radius: 100px;
-    transition: color 0.3s, background-color 0.3s, box-shadow 0.3s;
-  }
-
-  .tab-pill:hover {
-    color: #f3c864;
-    background-color: rgba(243, 200, 100, 0.1);
-  }
-
-  .tab-pill.active {
-    color: #000000;
-    background-color: #f3c864;
-    font-weight: 700;
-    box-shadow: 0 2px 10px rgba(243, 200, 100, 0.4);
-  }
-
-  .tab-pill.disabled {
-    pointer-events: none;
-    opacity: 0.25;
-    filter: grayscale(100%);
-  }
 </style>
 
 <script>
@@ -1507,6 +1317,15 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     }
   }
 
+  function positionDesktopSlide(slide) {
+    if (!(slide instanceof HTMLElement)) return;
+
+    slide.scrollTo({
+      left: 0,
+      top: 0,
+    });
+  }
+
   function resizePresentation() {
     if (!wrapper) return;
 
@@ -1516,11 +1335,13 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     const isTouchDevice = navigator.maxTouchPoints > 0 || coarsePointerQuery.matches;
+    const isPortrait = windowHeight >= windowWidth;
     const isMobile = windowWidth <= mobileBreakpoint
-      || (isTouchDevice && windowWidth <= tabletBreakpoint);
+      || (isTouchDevice && isPortrait && windowWidth <= tabletBreakpoint);
 
     if (isMobile) {
       root.dataset.presentationMode = 'mobile';
+      delete root.dataset.desktopScaleMode;
       root.style.setProperty('--slide-frame-scale', '1');
       root.style.setProperty('--slide-frame-left', '0px');
       root.style.setProperty('--slide-frame-top', '0px');
@@ -1538,27 +1359,26 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       return;
     }
 
-    const scale = Math.max(windowWidth / baseWidth, windowHeight / baseHeight);
+    const widthScale = windowWidth / baseWidth;
+    const heightScale = windowHeight / baseHeight;
+    const containScale = Math.min(widthScale, heightScale);
+    // Every desktop slide shares the same 16:9 contain scale. This keeps
+    // navigation, text and imagery visually consistent between routes.
+    const scale = containScale;
     const frameWidth = baseWidth * scale;
     const frameHeight = baseHeight * scale;
-    const frameLeft = (windowWidth - frameWidth) / 2;
-    const frameTop = (windowHeight - frameHeight) / 2;
 
     setMobileMenuOpen(false);
     root.dataset.presentationMode = 'desktop';
+    root.dataset.desktopScaleMode = 'contain';
     root.style.setProperty('--slide-frame-scale', String(scale));
-    root.style.setProperty('--slide-frame-left', `${frameLeft}px`);
-    root.style.setProperty('--slide-frame-top', `${frameTop}px`);
+    root.style.setProperty('--slide-frame-left', '0px');
+    root.style.setProperty('--slide-frame-top', '0px');
     root.style.setProperty('--slide-rendered-width', `${frameWidth}px`);
     root.style.setProperty('--slide-rendered-height', `${frameHeight}px`);
     requestAnimationFrame(() => {
       const slide = document.querySelector('.slide.active');
-      if (slide instanceof HTMLElement) {
-        slide.scrollTo({
-          left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
-          top: Math.max(0, (slide.scrollHeight - slide.clientHeight) / 2),
-        });
-      }
+      positionDesktopSlide(slide);
     });
   }
 
@@ -1601,10 +1421,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       resizePresentation();
       requestAnimationFrame(() => {
         if (root.dataset.presentationMode !== 'desktop') return;
-        targetSlide.scrollTo({
-          left: Math.max(0, (targetSlide.scrollWidth - targetSlide.clientWidth) / 2),
-          top: Math.max(0, (targetSlide.scrollHeight - targetSlide.clientHeight) / 2),
-        });
+        positionDesktopSlide(targetSlide);
       });
     }
   }
@@ -1793,16 +1610,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     setupProductAutoReturn(scroller, 'mobile', () => ({
       left: Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2),
       top: scroller.scrollTop,
-    }));
-  });
-
-  document.querySelectorAll('.slide[data-product-pan="1"]').forEach((slide) => {
-    if (!(slide instanceof HTMLElement)) return;
-    // Recenter horizontally only; keep the vertical position so the user can
-    // stay scrolled to read tall product/formula artwork on desktop.
-    setupProductAutoReturn(slide, 'desktop', () => ({
-      left: Math.max(0, (slide.scrollWidth - slide.clientWidth) / 2),
-      top: slide.scrollTop,
     }));
   });
 

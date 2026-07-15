@@ -19,8 +19,9 @@ const {
         const tabletBreakpoint = 1440;
         const isTouchDevice = navigator.maxTouchPoints > 0
           || window.matchMedia('(pointer: coarse)').matches;
+        const isPortrait = window.innerHeight >= window.innerWidth;
         const isMobile = window.innerWidth <= mobileBreakpoint
-          || (isTouchDevice && window.innerWidth <= tabletBreakpoint);
+          || (isTouchDevice && isPortrait && window.innerWidth <= tabletBreakpoint);
 
         document.documentElement.dataset.presentationMode = isMobile ? 'mobile' : 'desktop';
       })();
