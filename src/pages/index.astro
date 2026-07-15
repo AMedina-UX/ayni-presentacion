@@ -31,13 +31,13 @@ const MOBILE_PRICING_ASSETS = {
 
 const MOBILE_PRICING_CARDS = [
   {
-    pack: '08 DOYPACK',
-    price: 's/450.00',
-    points: '100 PUNTOS',
+    pack: '05 DOYPACK',
+    price: 'S/.450.00',
+    points: '60 PUNTOS',
   },
   {
     pack: '08 DOYPACK',
-    price: 's/720.00',
+    price: 'S/.720.00',
     points: '100 PUNTOS',
   },
 ] as const;
@@ -203,7 +203,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
             data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
             data-mobile-prev={mobileBackAction?.target || ""}
             data-mobile-next={mobileNextAction?.target || ""}
-            data-product-pan={isMobileProductImage ? "1" : ""}
+            data-mobile-hpan={isMobileProductImage ? "1" : ""}
           >
             <div class="slide-backdrop" aria-hidden="true">
               <img
@@ -1512,8 +1512,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       if (!currentSlide) return;
 
       // Product slides use native two-axis scroll, so a sideways gesture there
-      // belongs to the artwork rather than to slide navigation.
-      if (currentSlide.getAttribute('data-product-pan')) {
+      // belongs to the artwork (horizontal pan) rather than slide navigation.
+      if (currentSlide.getAttribute('data-mobile-hpan')) {
         return;
       }
 
