@@ -188,8 +188,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
         const mobileComposedScene = getMobileComposedScene(slide);
         const mobileFigmaBg = MOBILE_FIGMA_BACKGROUNDS[slide.id] || null;
         const isMobilePricingScene = slide.id === 'precios';
-        // Product slides: image fills full height (cover, sides cropped) and
-        // can be dragged sideways to peek the cropped edges, springing back.
+        // Product slides keep their original poster artwork, but mobile always
+        // fits it to the viewport width so the document never pans sideways.
         const isMobileProductImage = !mobileComposedScene && !!slide.header?.activeTab;
         const isMobileFormulaImage = slide.id.endsWith('-formula');
 
@@ -203,7 +203,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
             data-close={slide.header?.disableClose ? "" : (slide.header?.closeTo || "")}
             data-mobile-prev={mobileBackAction?.target || ""}
             data-mobile-next={mobileNextAction?.target || ""}
-            data-mobile-hpan={isMobileProductImage ? "1" : ""}
           >
             <div class="slide-backdrop" aria-hidden="true">
               <img
@@ -539,6 +538,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     inset: 0;
     overflow: hidden;
     background-color: #000000;
+    max-width: 100%;
+    overscroll-behavior-x: none;
   }
 
   html[data-presentation-mode='mobile'] .slide-backdrop,
@@ -548,6 +549,16 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   html[data-presentation-mode='mobile'] .mobile-stage {
     display: block;
+  }
+
+  html[data-presentation-mode='mobile'] .slide-container,
+  html[data-presentation-mode='mobile'] .slide-content-wrapper,
+  html[data-presentation-mode='mobile'] .slide,
+  html[data-presentation-mode='mobile'] .mobile-stage {
+    width: var(--mobile-vw, 100%);
+    max-width: 100%;
+    height: var(--mobile-vh, 100dvh);
+    overflow-x: clip;
   }
 
   .mobile-backdrop {
@@ -585,6 +596,12 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     z-index: 2;
     overflow-y: auto;
     overflow-x: hidden;
+    overflow-x: clip;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     scrollbar-color: #f3c864 rgba(0, 0, 0, 0.72);
     scrollbar-width: thin;
@@ -659,6 +676,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-scene {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   /* Slide image: fit width, scroll vertically to reveal the rest */
@@ -681,6 +700,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
+    overflow-x: clip;
     overscroll-behavior-y: contain;
     padding-bottom: calc(56px + env(safe-area-inset-bottom));
   }
@@ -699,23 +719,37 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     max-width: none;
   }
 
-  /* Product artwork is a real two-axis scroll area. The browser keeps the
-     current position and handles the elastic edge only beyond valid bounds. */
+  /* The AYNI Estrella artwork places its logo very close to the poster edge.
+     Keep it below the pinned navbar while preserving normal vertical scroll. */
+  .slide[data-slide-id='bonos-2'] .mobile-scroll {
+    padding-top: 40px;
+  }
+
+  /* Product artwork only scrolls vertically on mobile. Its width is always
+     constrained to the visual viewport, including iPhone Safari. */
   .mobile-scroll--product {
-    overflow: auto;
-    overscroll-behavior: auto;
-    touch-action: pan-x pan-y;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
   }
 
   .mobile-image-scene--product {
+    position: relative;
+    left: 50%;
     display: block;
     width: max(125vw, 390px, calc((var(--mobile-vh) - 56px) * 0.5625));
+    max-width: none;
+    transform: translateX(-50%);
   }
 
   .slide[data-slide-id='reset-360'] .mobile-image-scene--product {
+    left: calc(50% + 8px);
     width: max(122vw, 390px, calc((var(--mobile-vh) - 50px) * 0.5625));
     margin-top: -6px;
-    margin-left: 8px;
+    margin-left: 0;
   }
 
   /* Formula slides are also product scenes; scope the override to the double
@@ -726,9 +760,10 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   }
 
   .slide[data-slide-id='moravi-formula'] .mobile-image-scene--formula {
+    left: calc(50% - 7px);
     width: max(112vw, 390px, calc((var(--mobile-vh) - 65px) * 0.5625));
     margin-top: 9px;
-    margin-right: 7px;
+    margin-right: 0;
   }
   .slide[data-slide-id='reset-formula'] .mobile-image-scene--formula {
     width: max(112vw, 390px, calc((var(--mobile-vh) - 75px) * 0.5625));
@@ -821,6 +856,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   /* Pricing: responsive reconstruction of the 390x844 Figma frame. */
   .mobile-pricing-scene {
+    --mobile-pricing-shift-y: 14cqw;
     position: relative;
     width: 100%;
     min-height: 100%;
@@ -848,7 +884,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-glow {
     position: absolute;
-    top: 84.5667cqw;
+    top: calc(84.5667cqw - var(--mobile-pricing-shift-y));
     left: calc(50% - 2.51282cqw);
     z-index: 2;
     width: 46.2872cqw;
@@ -864,7 +900,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-logo {
     position: absolute;
-    top: 14.358974cqw;
+    top: calc(14.358974cqw - var(--mobile-pricing-shift-y));
     left: 50%;
     z-index: 2;
     display: block;
@@ -875,7 +911,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-heading {
     position: absolute;
-    top: 60cqw;
+    top: calc(60cqw - var(--mobile-pricing-shift-y));
     left: 6.794872cqw;
     z-index: 3;
     display: flex;
@@ -911,6 +947,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     inset: 0;
     z-index: 3;
     pointer-events: none;
+    transform: translateY(calc(0px - var(--mobile-pricing-shift-y)));
   }
 
   .mobile-pricing-product {
@@ -946,7 +983,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-pricing-cards {
     position: absolute;
-    top: 150.512821cqw;
+    top: calc(150.512821cqw - var(--mobile-pricing-shift-y));
     left: 4.102564cqw;
     z-index: 4;
     display: grid;
@@ -1046,7 +1083,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
 
   .mobile-footer {
     box-sizing: border-box;
-    position: absolute;
+    position: fixed;
     right: 0;
     bottom: 0;
     left: 0;
@@ -1055,18 +1092,12 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    width: 100%;
-    height: 56px;
-    padding: 0 16px;
+    width: var(--mobile-vw, 100%);
+    max-width: 100%;
+    height: calc(56px + env(safe-area-inset-bottom));
+    padding: 0 16px env(safe-area-inset-bottom);
     border-top: 1px solid rgba(243, 200, 100, 0.16);
     background: #000000;
-    transition: transform 0.3s ease;
-  }
-
-  /* On scroll-down the bar only "peeks" away (~40%), never fully hidden;
-     it returns fully when the user stops scrolling or scrolls up. */
-  html.mobile-nav-peek .mobile-footer {
-    transform: translateY(40%);
   }
 
   .mobile-footer-link {
@@ -1099,6 +1130,10 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
     inset: 0;
     z-index: 120;
     display: none;
+    width: var(--mobile-vw, 100%);
+    max-width: 100%;
+    height: var(--mobile-vh, 100dvh);
+    overflow-x: clip;
   }
 
   html[data-presentation-mode='mobile'].mobile-menu-open .mobile-menu-overlay {
@@ -1329,11 +1364,11 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   function resizePresentation() {
     if (!wrapper) return;
 
-    const previousMode = root.dataset.presentationMode;
     const baseWidth = 1920;
     const baseHeight = 1080;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const visualViewport = window.visualViewport;
+    const windowWidth = Math.round(visualViewport?.width || window.innerWidth);
+    const windowHeight = Math.round(visualViewport?.height || window.innerHeight);
     const isTouchDevice = navigator.maxTouchPoints > 0 || coarsePointerQuery.matches;
     const isPortrait = windowHeight >= windowWidth;
     const isMobile = windowWidth <= mobileBreakpoint
@@ -1347,15 +1382,8 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       root.style.setProperty('--slide-frame-top', '0px');
       root.style.setProperty('--slide-rendered-width', `${baseWidth}px`);
       root.style.setProperty('--slide-rendered-height', `${baseHeight}px`);
+      root.style.setProperty('--mobile-vw', `${windowWidth}px`);
       root.style.setProperty('--mobile-vh', `${windowHeight}px`);
-      if (previousMode && previousMode !== 'mobile') {
-        requestAnimationFrame(() => {
-          const scroller = document.querySelector('.slide.active .mobile-scroll--product');
-          if (scroller instanceof HTMLElement) {
-            scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
-          }
-        });
-      }
       return;
     }
 
@@ -1383,6 +1411,7 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
   }
 
   window.addEventListener('resize', resizePresentation);
+  window.visualViewport?.addEventListener('resize', resizePresentation);
   resizePresentation();
   document.addEventListener('DOMContentLoaded', resizePresentation);
 
@@ -1405,17 +1434,12 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       activeSlideId = targetId;
       setMobileMenuOpen(false);
 
-      // Each slide opens at the top. Product artwork uses real scroll and
-      // starts horizontally centered when its content is wider than the view.
-      root.classList.remove('mobile-nav-peek');
+      // Each slide opens at the top and stays horizontally locked to the
+      // viewport. Only vertical content scrolling is allowed on mobile.
       const scroller = targetSlide.querySelector('.mobile-scroll');
       if (scroller) {
         scroller.scrollTop = 0;
-        if (scroller.classList.contains('mobile-scroll--product')) {
-          requestAnimationFrame(() => {
-            scroller.scrollLeft = Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2);
-          });
-        }
+        scroller.scrollLeft = 0;
       }
 
       resizePresentation();
@@ -1511,12 +1535,6 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       const currentSlide = document.getElementById(`slide-${activeSlideId}`);
       if (!currentSlide) return;
 
-      // Product slides use native two-axis scroll, so a sideways gesture there
-      // belongs to the artwork (horizontal pan) rather than slide navigation.
-      if (currentSlide.getAttribute('data-mobile-hpan')) {
-        return;
-      }
-
       // On mobile, swipe follows the same prev/next as the bottom bar.
       const isMobile = root.dataset.presentationMode === 'mobile';
       const prev = currentSlide.getAttribute(isMobile ? 'data-mobile-prev' : 'data-prev');
@@ -1533,110 +1551,4 @@ function getMobileComposedScene(slide: Slide): MobileComposedSceneConfig | null 
       }
     }
   }
-
-
-  // Bottom Atrás/Siguiente bar: on scroll-down it only peeks away (~40%),
-  // and returns fully when the user stops scrolling (idle) or scrolls up.
-  const SCROLL_PEEK_THRESHOLD = 8;
-  const NAV_IDLE_REVEAL_MS = 500;
-  const PRODUCT_RETURN_DELAY_MS = 140;
-  let navIdleTimer;
-
-  function setNavPeek(peek) {
-    root.classList.toggle('mobile-nav-peek', Boolean(peek));
-  }
-
-  function setupProductAutoReturn(element, presentationMode, getHomePosition) {
-    let idleTimer;
-    let returnFrame = 0;
-    let isReturning = false;
-    let interactionActive = false;
-
-    const cancelReturn = () => {
-      clearTimeout(idleTimer);
-      cancelAnimationFrame(returnFrame);
-      isReturning = false;
-    };
-
-    const returnHome = () => {
-      if (root.dataset.presentationMode !== presentationMode) return;
-
-      const target = getHomePosition();
-      const deltaLeft = target.left - element.scrollLeft;
-      const deltaTop = target.top - element.scrollTop;
-
-      if (Math.abs(deltaLeft) < 0.5 && Math.abs(deltaTop) < 0.5) return;
-
-      // Snap straight back, no animation. Ignore the scroll event this triggers
-      // so it does not reschedule another return.
-      isReturning = true;
-      element.scrollLeft = target.left;
-      element.scrollTop = target.top;
-      returnFrame = requestAnimationFrame(() => { isReturning = false; });
-    };
-
-    const scheduleReturn = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(returnHome, PRODUCT_RETURN_DELAY_MS);
-    };
-
-    element.addEventListener('scroll', () => {
-      if (isReturning || interactionActive || root.dataset.presentationMode !== presentationMode) return;
-      scheduleReturn();
-    }, { passive: true });
-
-    const beginInteraction = () => {
-      interactionActive = true;
-      cancelReturn();
-    };
-
-    const finishInteraction = () => {
-      if (!interactionActive) return;
-      interactionActive = false;
-      scheduleReturn();
-    };
-
-    element.addEventListener('touchstart', beginInteraction, { passive: true });
-    element.addEventListener('touchend', finishInteraction, { passive: true });
-    element.addEventListener('touchcancel', finishInteraction, { passive: true });
-    element.addEventListener('pointerdown', beginInteraction);
-    element.addEventListener('pointerup', finishInteraction);
-    element.addEventListener('pointercancel', finishInteraction);
-    element.addEventListener('wheel', cancelReturn, { passive: true });
-  }
-
-  document.querySelectorAll('.mobile-scroll--product').forEach((scroller) => {
-    if (!(scroller instanceof HTMLElement)) return;
-    setupProductAutoReturn(scroller, 'mobile', () => ({
-      left: Math.max(0, (scroller.scrollWidth - scroller.clientWidth) / 2),
-      top: scroller.scrollTop,
-    }));
-  });
-
-  document.querySelectorAll('.mobile-scroll').forEach((scroller) => {
-    if (!(scroller instanceof HTMLElement)) return;
-    if (scroller.classList.contains('mobile-scroll--product')) return;
-    if (scroller.closest('[data-slide-id="precios"]')) return;
-    let lastScrollTop = 0;
-
-    scroller.addEventListener('scroll', () => {
-      if (root.dataset.presentationMode !== 'mobile') return;
-
-      const current = scroller.scrollTop;
-
-      if (current <= 4) {
-        setNavPeek(false);
-      } else if (current > lastScrollTop + SCROLL_PEEK_THRESHOLD) {
-        setNavPeek(true);
-      } else if (current < lastScrollTop - SCROLL_PEEK_THRESHOLD) {
-        setNavPeek(false);
-      }
-
-      lastScrollTop = current;
-
-      // Reveal the bar again once scrolling settles.
-      clearTimeout(navIdleTimer);
-      navIdleTimer = setTimeout(() => setNavPeek(false), NAV_IDLE_REVEAL_MS);
-    }, { passive: true });
-  });
 </script>

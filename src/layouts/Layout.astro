@@ -134,6 +134,8 @@ const {
         color: #ffffff;
         font-family: 'Montserrat', sans-serif;
         overflow: hidden;
+        max-width: 100%;
+        overscroll-behavior-x: none;
         user-select: none;
         -webkit-user-select: none;
         -webkit-tap-highlight-color: transparent;
@@ -142,10 +144,19 @@ const {
       /* Slide base stylesheet */
       .slide-container {
         position: relative;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        max-width: 100%;
+        height: 100dvh;
         overflow: hidden;
         background-color: #000;
+      }
+
+      html[data-presentation-mode='mobile'],
+      html[data-presentation-mode='mobile'] body {
+        width: var(--mobile-vw, 100%);
+        max-width: 100%;
+        height: var(--mobile-vh, 100dvh);
+        overflow-x: clip;
       }
 
       /* Slide viewport logic (locks aspect ratio to 16:9 like a standard presentation) */
