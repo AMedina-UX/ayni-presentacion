@@ -1,7 +1,11 @@
+import type { ImageMetadata } from 'astro';
+import { DESKTOP_IMAGES } from './images';
+import { SlideId } from './slide-ids';
+
 export interface SlideButton {
   name: string;
-  linkTo: string; // The slide ID it links to
-  image: string;  // Path to the card/button overlay image
+  linkTo: SlideId; // The slide ID it links to
+  image: ImageMetadata; // Imported card/button image optimized by Astro
   x: number;      // Coordinates inside 1920x1080 space
   y: number;
   width: number;
@@ -11,10 +15,10 @@ export interface SlideButton {
 
 export interface SlideHeader {
   showClose?: boolean;
-  closeTo?: string; // target slide ID when closing
+  closeTo?: SlideId; // target slide ID when closing
   showArrows?: boolean;
-  prevSlide?: string; // target slide ID for left arrow
-  nextSlide?: string; // target slide ID for right arrow
+  prevSlide?: SlideId; // target slide ID for left arrow
+  nextSlide?: SlideId; // target slide ID for right arrow
   activeTab?: 'capucci' | 'moravi' | 'reset' | null;
   disableClose?: boolean; // Set to true to disable close button action
   disableArrows?: boolean; // Set to true to disable next/prev arrows
@@ -24,41 +28,41 @@ export interface SlideHeader {
 }
 
 export interface Slide {
-  id: string;
+  id: SlideId;
   name: string;
-  bgImage: string;
+  bgImage: ImageMetadata;
   buttons?: SlideButton[];
   header?: SlideHeader;
 }
 
 export const SLIDES: Slide[] = [
   {
-    id: "home",
+    id: SlideId.Home,
     name: "AYNI - Presentación",
-    bgImage: "/assets/bg_home.png",
+    bgImage: DESKTOP_IMAGES.bgHome,
     buttons: [
       {
         name: "PRODUCTOS",
-        linkTo: "productos",
-        image: "/assets/btn_productos.png",
+        linkTo: SlideId.Products,
+        image: DESKTOP_IMAGES.btnProductos,
         x: 170,
         y: 408,
         width: 500,
         height: 500
       },
       {
-        name: "PLAN DE COMPENSACIÓN",
-        linkTo: "plan",
-        image: "/assets/btn_plan.png",
+        name: "BONOS",
+        linkTo: SlideId.Bonuses,
+        image: DESKTOP_IMAGES.btnBonos,
         x: 710,
         y: 408,
         width: 500,
-        height: 500
+        height: 500,
       },
       {
-        name: "BONOS",
-        linkTo: "bonos-1",
-        image: "/assets/btn_bonos.png",
+        name: "PLAN DE COMPENSACIÓN",
+        linkTo: SlideId.CompensationPlan,
+        image: DESKTOP_IMAGES.btnPlan,
         x: 1250,
         y: 408,
         width: 500,
@@ -67,14 +71,14 @@ export const SLIDES: Slide[] = [
     ]
   },
   {
-    id: "productos",
+    id: SlideId.Products,
     name: "AYNI - Productos",
-    bgImage: "/assets/bg_productos.png",
+    bgImage: DESKTOP_IMAGES.bgProductos,
     buttons: [
       {
         name: "CAPUCCI 360",
-        linkTo: "capucci-360",
-        image: "/assets/btn_capucci.png",
+        linkTo: SlideId.Capucci,
+        image: DESKTOP_IMAGES.btnCapucci,
         x: 357,
         y: 598,
         width: 375,
@@ -82,8 +86,8 @@ export const SLIDES: Slide[] = [
       },
       {
         name: "MORAVI 360",
-        linkTo: "moravi-360",
-        image: "/assets/btn_moravi.png",
+        linkTo: SlideId.Moravi,
+        image: DESKTOP_IMAGES.btnMoravi,
         x: 772,
         y: 598,
         width: 376,
@@ -91,8 +95,8 @@ export const SLIDES: Slide[] = [
       },
       {
         name: "RESET 360",
-        linkTo: "reset-360",
-        image: "/assets/btn_reset.png",
+        linkTo: SlideId.Reset,
+        image: DESKTOP_IMAGES.btnReset,
         x: 1188,
         y: 598,
         width: 375,
@@ -101,121 +105,121 @@ export const SLIDES: Slide[] = [
     ],
     header: {
       showClose: true,
-      closeTo: "home"
+      closeTo: SlideId.Home
     }
   },
   {
-    id: "capucci-360",
+    id: SlideId.Capucci,
     name: "AYNI - Capucci 360",
-    bgImage: "/assets/bg_capucci.png",
+    bgImage: DESKTOP_IMAGES.bgCapucci,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "productos",
-      nextSlide: "capucci-formula",
+      prevSlide: SlideId.Products,
+      nextSlide: SlideId.CapucciFormula,
       activeTab: "capucci"
     }
   },
   {
-    id: "capucci-formula",
+    id: SlideId.CapucciFormula,
     name: "AYNI - Capucci 360 Fórmula",
-    bgImage: "/assets/bg_capucci_formula.png",
+    bgImage: DESKTOP_IMAGES.bgCapucciFormula,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "capucci-360",
-      nextSlide: "precios",
+      prevSlide: SlideId.Capucci,
+      nextSlide: SlideId.Pricing,
       activeTab: "capucci"
     }
   },
   {
-    id: "moravi-360",
+    id: SlideId.Moravi,
     name: "AYNI - Moravi 360",
-    bgImage: "/assets/bg_moravi.png",
+    bgImage: DESKTOP_IMAGES.bgMoravi,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "capucci-formula",
-      nextSlide: "moravi-formula",
+      prevSlide: SlideId.Products,
+      nextSlide: SlideId.MoraviFormula,
       activeTab: "moravi"
     }
   },
   {
-    id: "moravi-formula",
+    id: SlideId.MoraviFormula,
     name: "AYNI - Moravi 360 Fórmula",
-    bgImage: "/assets/bg_moravi_formula.png",
+    bgImage: DESKTOP_IMAGES.bgMoraviFormula,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "moravi-360",
-      nextSlide: "precios",
+      prevSlide: SlideId.Moravi,
+      nextSlide: SlideId.Pricing,
       activeTab: "moravi"
     }
   },
   {
-    id: "reset-360",
+    id: SlideId.Reset,
     name: "AYNI - Reset 360",
-    bgImage: "/assets/bg_reset.png",
+    bgImage: DESKTOP_IMAGES.bgReset,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "moravi-formula",
-      nextSlide: "reset-formula",
+      prevSlide: SlideId.Products,
+      nextSlide: SlideId.ResetFormula,
       activeTab: "reset"
     }
   },
   {
-    id: "reset-formula",
+    id: SlideId.ResetFormula,
     name: "AYNI - Reset 360 Fórmula",
-    bgImage: "/assets/bg_reset_formula.png",
+    bgImage: DESKTOP_IMAGES.bgResetFormula,
     header: {
       showClose: true,
-      closeTo: "productos",
+      closeTo: SlideId.Products,
       showArrows: true,
-      prevSlide: "reset-360",
-      nextSlide: "precios",
+      prevSlide: SlideId.Reset,
+      nextSlide: SlideId.Pricing,
       activeTab: "reset"
     }
   },
   {
-    id: "bonos-1",
+    id: SlideId.Bonuses,
     name: "AYNI - Bonos",
-    bgImage: "/assets/bg_bonos.png",
+    bgImage: DESKTOP_IMAGES.bgBonos,
     header: {
       showClose: true,
-      closeTo: "home",
+      closeTo: SlideId.Home,
       showArrows: true,
-      prevSlide: "home",
-      nextSlide: "bonos-2"
+      prevSlide: SlideId.Home,
+      nextSlide: SlideId.BonusesTravel
     }
   },
   {
-    id: "bonos-2",
+    id: SlideId.BonusesTravel,
     name: "AYNI Estrella",
-    bgImage: "/assets/bg_bonos_travel.png",
+    bgImage: DESKTOP_IMAGES.bgBonosTravel,
     header: {
       showClose: true,
-      closeTo: "home",
+      closeTo: SlideId.Home,
       showArrows: true,
       disableNextArrow: true,
-      prevSlide: "bonos-1"
+      prevSlide: SlideId.Bonuses
     }
   },
   {
-    id: "precios",
+    id: SlideId.Pricing,
     name: "AYNI - Productos",
-    bgImage: "/assets/bg_doypacks.png",
+    bgImage: DESKTOP_IMAGES.bgDoypacks,
     header: {
       showClose: true,
-      closeTo: "home",
+      closeTo: SlideId.Home,
       showArrows: true,
       disableNextArrow: true,
-      prevSlide: "productos",
+      prevSlide: SlideId.Products,
     }
   }
 ];

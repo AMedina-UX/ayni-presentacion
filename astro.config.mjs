@@ -4,6 +4,10 @@ import pwa from '@vite-pwa/astro';
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
+  // The toolbar overlays bottom controls when testing on a real phone.
+  devToolbar: {
+    enabled: false
+  },
   build: {
     format: 'file'
   },
@@ -40,9 +44,29 @@ export default defineConfig({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        // Keep the app shell available offline. Astro-generated optimized
+        // images are cached on first use so installation stays lightweight.
         globPatterns: ['**/*.{html,js,css,svg,png,ico,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/offline.html',
         runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) =>
+              request.destination === 'image' &&
+              url.origin === self.location.origin &&
+              url.pathname.startsWith('/_astro/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ayni-optimized-images',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
@@ -57,8 +81,9 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: true,
-        navigateFallbackAllowlist: [/^\/offline.html$/]
+        // A development service worker can keep serving an older presentation
+        // after the source changes. PWA behavior is verified from the build.
+        enabled: false
       }
     })
   ]

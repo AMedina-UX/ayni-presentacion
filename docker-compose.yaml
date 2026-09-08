@@ -1,0 +1,17 @@
+services:
+  app.fe.ayni-webpage-landing:
+    labels:
+      svc: "app.fe.ayni-webpage-landing"
+    container_name: app.fe.ayni-webpage-landing
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "80"
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
